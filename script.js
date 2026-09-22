@@ -781,8 +781,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return {
             primary: label,
             raw: label,
-            breakdown: `Coin Toss: ${label}`,
-            detailTitle: 'Coin Toss',
+            breakdown: '',
+            detailTitle: '',
             mode: 'coin',
             isHeads: isHeads
         };

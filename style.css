@@ -1101,16 +1101,6 @@ input[type="number"]::-webkit-inner-spin-button {
     letter-spacing: 0.6px;
 }
 
-.coin-subhint {
-    font-size: 0.78rem;
-    color: var(--color-fg-muted);
-    text-align: center;
-}
-
-.coin-subhint strong {
-    color: var(--color-fg-default);
-}
-
 @keyframes coinTossArc {
     0% { transform: translateY(0) scale(1); }
     40% { transform: translateY(-40px) scale(1.15); }
