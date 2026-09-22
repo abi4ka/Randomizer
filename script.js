@@ -92,6 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const coinControlsSection = document.getElementById('coin-controls-section');
     const diceCount = document.getElementById('dice-count');
     const diceModifier = document.getElementById('dice-modifier');
+    const coinWrapper = document.getElementById('coin-wrapper');
+    const coinDisc = document.getElementById('coin-disc');
+    let coinRotationY = 0;
 
     // Live Result Stage DOM
     const primaryResultText = document.getElementById('primary-result-text');
@@ -717,6 +720,39 @@ document.addEventListener('DOMContentLoaded', () => {
         saveSettingsToStorage();
     });
 
+    if (coinWrapper) {
+        coinWrapper.addEventListener('click', () => {
+            executeRoll();
+        });
+    }
+
+    function flipCoinVisual(isHeads, animated = true) {
+        if (!coinDisc || !coinWrapper) return;
+
+        if (!animated) {
+            coinRotationY = isHeads ? 0 : 180;
+            coinDisc.style.transition = 'none';
+            coinDisc.style.transform = `rotateY(${coinRotationY}deg)`;
+            return;
+        }
+
+        const currentFacingHeads = (Math.round(coinRotationY / 180) % 2) === 0;
+        let extra = 1800;
+        if (isHeads) {
+            extra += currentFacingHeads ? 0 : 180;
+        } else {
+            extra += currentFacingHeads ? 180 : 0;
+        }
+        coinRotationY += extra;
+
+        coinDisc.style.transition = 'transform 0.65s cubic-bezier(0.18, 0.85, 0.3, 1.15)';
+        coinDisc.style.transform = `rotateY(${coinRotationY}deg)`;
+
+        coinWrapper.classList.remove('coin-tossing');
+        void coinWrapper.offsetWidth;
+        coinWrapper.classList.add('coin-tossing');
+    }
+
     document.querySelectorAll('.dice-type-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const sides = parseInt(btn.getAttribute('data-sides'), 10) || 6;
@@ -727,16 +763,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateDiceResult() {
         if (activeDiceSubmode === 'coin') {
-            // Direct clean 1-coin toss
-            const flip = cryptoRandomFloat() < 0.5 ? 'Heads' : 'Tails';
-            const icon = flip === 'Heads' ? '🪙' : '🦅';
+            const isHeads = cryptoRandomFloat() < 0.5;
+            const label = isHeads ? 'Heads' : 'Tails';
+            const ruLabel = isHeads ? 'Орёл' : 'Решка';
 
             return {
-                primary: `${flip} ${icon}`,
-                raw: flip,
-                breakdown: `Coin Flip: ${flip}`,
+                primary: `${label} (${ruLabel})`,
+                raw: `${label} (${ruLabel})`,
+                breakdown: `Coin Flip: ${label} • ${ruLabel}`,
                 detailTitle: 'Coin Flip',
-                mode: 'dice'
+                mode: 'dice',
+                isHeads: isHeads
             };
         } else {
             let count = parseInt(diceCount.value, 10);
@@ -796,6 +833,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Instant generation (Animated OFF)
             try {
                 const finalResult = getCandidateResult(true);
+                if (activeTab === 'dice' && activeDiceSubmode === 'coin' && finalResult.isHeads !== undefined) {
+                    flipCoinVisual(finalResult.isHeads, false);
+                }
                 displayFinalResult(finalResult);
             } catch (err) {
                 console.error("Roll execution error:", err);
@@ -812,15 +852,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const intermediateDelays = [45, 60, 80, 105, 135, 175]; // Easing deceleration
         let tick = 0;
 
+        let targetCoinResult = null;
+        if (activeTab === 'dice' && activeDiceSubmode === 'coin') {
+            targetCoinResult = generateDiceResult();
+            flipCoinVisual(targetCoinResult.isHeads, true);
+        }
+
         function runNextTick() {
             if (tick < 6) {
                 // Ticks 1 to 6: Intermediate random values (non-final)
-                const intermediate = getCandidateResult(false);
-                if (intermediate) {
-                    adjustPrimaryFontSize(intermediate.primary);
-                    primaryResultText.textContent = intermediate.primary;
+                if (targetCoinResult) {
+                    primaryResultText.textContent = 'Flipping...';
                     primaryResultText.classList.add('animating');
                     playTickSound();
+                } else {
+                    const intermediate = getCandidateResult(false);
+                    if (intermediate) {
+                        adjustPrimaryFontSize(intermediate.primary);
+                        primaryResultText.textContent = intermediate.primary;
+                        primaryResultText.classList.add('animating');
+                        playTickSound();
+                    }
                 }
                 const delay = intermediateDelays[tick];
                 tick++;
@@ -828,7 +880,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Tick 7: Final Chosen Value Lock-in!
                 try {
-                    const finalResult = getCandidateResult(true);
+                    const finalResult = targetCoinResult || getCandidateResult(true);
                     displayFinalResult(finalResult);
                 } catch (err) {
                     console.error("Roll execution error:", err);
@@ -932,9 +984,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 displayTitle = displayTitle.replace(/^Range:\s*/i, '').replace(/\s*\(Decimals\)/i, '').replace('–', 'to').trim();
             }
             const titleHtml = displayTitle ? `<span class="item-title" title="${displayTitle}">${displayTitle}</span>` : '';
-            const colorDot = (item.mode === 'color' && item.value && item.value.startsWith('#'))
-                ? `<span class="color-swatch-mini" style="background-color: ${item.value}"></span>`
-                : '';
+            let valueHtml = item.value;
+            if (item.mode === 'color' && typeof item.value === 'string') {
+                const hexMatches = item.value.match(/#[0-9a-fA-F]{3,8}/g);
+                if (hexMatches && hexMatches.length > 0) {
+                    valueHtml = hexMatches.map(hex => 
+                        `<span class="color-item-chip"><span class="color-swatch-mini" style="background-color: ${hex}"></span>${hex}</span>`
+                    ).join(', ');
+                }
+            }
 
             row.innerHTML = `
                 <div class="item-row-header">
@@ -959,7 +1017,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <div class="item-row-body">
-                    <div class="item-value" title="${item.value}">${colorDot}${item.value}</div>
+                    <div class="item-value" title="${item.value}">${valueHtml}</div>
                 </div>
             `;
 

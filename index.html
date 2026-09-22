@@ -336,11 +336,33 @@
                                 </div>
                             </div>
 
-                            <!-- COIN SECTION -->
+                            <!-- COIN SECTION: Realistic 3D Interactive Coin -->
                             <div id="coin-controls-section" class="coin-controls-section hidden">
-                                <div class="coin-prompt-banner">
-                                    <span class="coin-prompt-icon">🪙</span>
-                                    <span class="coin-prompt-text">Coin Flip: Click <strong>«Roll / Generate»</strong> to toss the coin (Heads or Tails).</span>
+                                <div class="coin-stage">
+                                    <div class="coin-wrapper" id="coin-wrapper" title="Click to flip the coin!">
+                                        <div class="coin-disc" id="coin-disc">
+                                            <!-- Front: Heads (Орёл) -->
+                                            <div class="coin-face coin-face-heads">
+                                                <svg class="coin-icon" width="38" height="38" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M12 2C10.5 4 8 5.5 5 6C5 12 8 18 12 22C16 18 19 12 19 6C16 5.5 13.5 4 12 2ZM12 4.3C13.2 5.5 15.1 6.5 17.1 7C16.8 11.6 14.4 16.3 12 19.8C9.6 16.3 7.2 11.6 6.9 7C8.9 6.5 10.8 5.5 12 4.3Z"/>
+                                                    <path d="M12 7.5L13.2 10.5L16.5 11L14 13.2L14.7 16.5L12 14.8L9.3 16.5L10 13.2L7.5 11L10.8 10.5L12 7.5Z"/>
+                                                </svg>
+                                                <span class="coin-face-title">HEADS</span>
+                                                <span class="coin-face-sub">ОРЁЛ</span>
+                                            </div>
+                                            <!-- Back: Tails (Решка) -->
+                                            <div class="coin-face coin-face-tails">
+                                                <svg class="coin-icon" width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M10 6.5L12.5 4.5V17.5H10V6.5Z"/>
+                                                    <path d="M8 17.5H16V19.5H8V17.5Z"/>
+                                                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" fill="none" stroke-dasharray="3 2"/>
+                                                </svg>
+                                                <span class="coin-face-title">TAILS</span>
+                                                <span class="coin-face-sub">РЕШКА</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span class="coin-subhint">Click the coin or <strong>Roll</strong> to flip</span>
                                 </div>
                             </div>
                         </div>
