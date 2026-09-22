@@ -41,11 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnToggleSound = document.getElementById('btn-toggle-sound');
     const iconSoundOn = document.getElementById('icon-sound-on');
     const iconSoundOff = document.getElementById('icon-sound-off');
-    const statusBadge = document.getElementById('status-badge');
-    const statusText = document.getElementById('status-text');
     const statCount = document.getElementById('stat-count');
     const statTotalRolls = document.getElementById('stat-total-rolls');
-    const statActiveMode = document.getElementById('stat-active-mode');
     const toastContainer = document.getElementById('toast-container');
     const glowOrb1 = document.getElementById('glow-orb-1');
     const glowOrb2 = document.getElementById('glow-orb-2');
@@ -222,8 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
             latestResultRaw = '';
             resultBreakdown.innerHTML = '';
             resultBreakdown.classList.add('hidden');
-            statusBadge.className = 'badge';
-            statusText.textContent = 'IDLE';
             return;
         }
 
@@ -240,9 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             resultBreakdown.classList.add('hidden');
         }
-
-        statusBadge.className = 'badge badge-ready';
-        statusText.textContent = 'RESULT';
 
         if (result.mode === 'color' && result.colorData) {
             currentColorData = result.colorData;
@@ -264,14 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.keys(modeViews).forEach(key => {
             modeViews[key].classList.toggle('hidden', key !== tabKey);
         });
-
-        const modeNames = {
-            numbers: 'Numbers',
-            list: 'List',
-            colors: 'Colors',
-            dice: 'Dice & Coins'
-        };
-        statActiveMode.textContent = modeNames[tabKey] || 'Numbers';
 
         // Render this tab's last result (or emptiness if not rolled yet)
         renderTabResult(tabResults[tabKey]);
@@ -787,8 +771,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         isRolling = true;
         btnRoll.classList.add('rolling');
-        statusBadge.className = 'badge badge-rolling';
-        statusText.textContent = 'ROLLING...';
 
         if (!isAnimated) {
             // Instant generation (Animated OFF)
@@ -868,10 +850,6 @@ function displayFinalResult(result) {
 
     // Play resolution chime
     playSuccessSound();
-
-    // Status badge update
-    statusBadge.className = 'badge badge-ready';
-    statusText.textContent = 'RESULT';
 
     // Increment roll counter
     totalRollsCount++;
@@ -1034,14 +1012,13 @@ function displayFinalResult(result) {
     }
 
     function triggerCopiedBadge() {
-        const prevText = statusText.textContent;
-        const prevClass = statusBadge.className;
-        statusBadge.className = 'badge badge-copied';
-        statusText.textContent = 'COPIED';
-        setTimeout(() => {
-            statusBadge.className = prevClass;
-            statusText.textContent = prevText;
-        }, 1200);
+        if (copyBtnLabel) {
+            const prev = copyBtnLabel.textContent;
+            copyBtnLabel.textContent = 'Copied!';
+            setTimeout(() => {
+                copyBtnLabel.textContent = prev;
+            }, 1200);
+        }
     }
 
     function showToast(msg) {

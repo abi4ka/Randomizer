@@ -1062,17 +1062,6 @@ input[type="number"]::-webkit-inner-spin-button {
     transition: var(--transition);
 }
 
-.live-result-banner::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--color-accent-fg), transparent);
-    opacity: 0.6;
-}
-
 .result-banner-header {
     display: flex;
     align-items: center;
@@ -1128,7 +1117,6 @@ input[type="number"]::-webkit-inner-spin-button {
     font-weight: 700;
     letter-spacing: -0.5px;
     color: #ffffff;
-    text-shadow: 0 0 24px rgba(88, 166, 255, 0.45);
     word-break: break-word;
     transition: transform 0.15s ease, opacity 0.15s ease;
 }
@@ -1138,7 +1126,7 @@ input[type="number"]::-webkit-inner-spin-button {
     opacity: 0.75;
     transform: scale(0.96);
     filter: blur(0.5px);
-    color: var(--color-accent-fg);
+    color: var(--color-fg-default);
 }
 
 .duration-glow.result-pop {

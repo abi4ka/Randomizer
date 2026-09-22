@@ -60,13 +60,8 @@
                 </div>
             </div>
 
-            <!-- Global Status & Quick Stats -->
+            <!-- Quick Stats -->
             <div class="nav-center">
-                <div id="status-badge" class="badge">
-                    <span class="status-dot"></span>
-                    <span id="status-text">IDLE</span>
-                </div>
-
                 <div class="stats-group">
                     <span class="stat-item" title="Total saved rolls">
                         <span class="stat-label">Saved:</span>
@@ -76,11 +71,6 @@
                     <span class="stat-item" title="Total rolls made in current session">
                         <span class="stat-label">Rolls:</span>
                         <strong id="stat-total-rolls">0</strong>
-                    </span>
-                    <span class="stat-separator">•</span>
-                    <span class="stat-item" title="Active mode">
-                        <span class="stat-label">Mode:</span>
-                        <strong id="stat-active-mode">Numbers</strong>
                     </span>
                 </div>
             </div>
@@ -120,15 +110,24 @@
                     <div class="card-header">
                         <div class="card-header-left">
                             <div class="mode-icon">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="16 3 21 3 21 8"></polyline>
-                                    <line x1="4" y1="20" x2="21" y2="3"></line>
-                                    <polyline points="21 16 21 21 16 21"></polyline>
-                                    <line x1="15" y1="15" x2="21" y2="21"></line>
-                                    <line x1="4" y1="4" x2="9" y2="9"></line>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="12 2 21 6.8 12 11.6 3 6.8" fill="#161b22" stroke="currentColor"/>
+                                    <polygon points="3 6.8 12 11.6 12 21.6 3 16.8" fill="#0d1117" stroke="currentColor"/>
+                                    <polygon points="12 11.6 21 6.8 21 16.8 12 21.6" fill="#11151c" stroke="currentColor"/>
+                                    <circle cx="7.5" cy="5.2" r="1.1" fill="currentColor" stroke="none"/>
+                                    <circle cx="12" cy="6.8" r="1.1" fill="currentColor" stroke="none"/>
+                                    <circle cx="16.5" cy="8.4" r="1.1" fill="currentColor" stroke="none"/>
+                                    <circle cx="6.5" cy="11" r="1.1" fill="currentColor" stroke="none"/>
+                                    <circle cx="8.5" cy="17.4" r="1.1" fill="currentColor" stroke="none"/>
+                                    <circle cx="15" cy="10.2" r="1.1" fill="currentColor" stroke="none"/>
+                                    <circle cx="18" cy="8.6" r="1.1" fill="currentColor" stroke="none"/>
+                                    <circle cx="15" cy="14" r="1.1" fill="currentColor" stroke="none"/>
+                                    <circle cx="18" cy="12.4" r="1.1" fill="currentColor" stroke="none"/>
+                                    <circle cx="15" cy="17.8" r="1.1" fill="currentColor" stroke="none"/>
+                                    <circle cx="18" cy="16.2" r="1.1" fill="currentColor" stroke="none"/>
                                 </svg>
                             </div>
-                            <span class="card-title">RANDOM GENERATOR</span>
+                            <span class="card-title">Randomizer</span>
                         </div>
 
                         <!-- Mode Switcher Tabs -->
