@@ -18,11 +18,11 @@
     --color-fg-subtle: #6e7681;
     --color-fg-on-emphasis: #ffffff;
 
-    /* GitHub Brand Accents */
-    --color-accent-fg: #58a6ff;
-    --color-accent-emphasis: #1f6feb;
-    --color-accent-muted: rgba(56, 139, 253, 0.15);
-    --color-accent-subtle: rgba(56, 139, 253, 0.08);
+    /* Brand Accents */
+    --color-accent-fg: #5E6FF8;
+    --color-accent-emphasis: #4f5ee3;
+    --color-accent-muted: rgba(94, 111, 248, 0.15);
+    --color-accent-subtle: rgba(94, 111, 248, 0.08);
 
     /* GitHub Success (Iconic Green) */
     --color-success-fg: #3fb950;
@@ -160,7 +160,13 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-accent-fg);
+}
+
+.brand-icon-img {
+    width: 34px;
+    height: 34px;
+    display: block;
+    user-select: none;
 }
 
 .brand-text h1 {
@@ -416,6 +422,8 @@ body {
 }
 
 .icon-dice-spin {
+    width: 24px;
+    height: 24px;
     transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -494,13 +502,20 @@ body {
 }
 
 .mode-icon {
-    color: var(--color-fg-muted);
     display: flex;
     align-items: center;
 }
 
+.mode-icon-img,
+.mode-icon svg {
+    width: 28px;
+    height: 28px;
+    display: block;
+    user-select: none;
+}
+
 .card-title {
-    font-size: 0.74rem;
+    font-size: 0.88rem;
     font-weight: 600;
     letter-spacing: 0.5px;
     color: var(--color-fg-default);

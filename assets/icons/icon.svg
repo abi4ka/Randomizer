@@ -1,26 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1024" height="1024" fill="none" stroke="#58a6ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-  <!-- Isometric 3D Die / Cube -->
-  <!-- Top Face -->
-  <polygon points="12 2 21 6.8 12 11.6 3 6.8" fill="#161b22" stroke="#58a6ff" stroke-width="1.8"/>
-  <!-- Left Face -->
-  <polygon points="3 6.8 12 11.6 12 21.6 3 16.8" fill="#0d1117" stroke="#58a6ff" stroke-width="1.8"/>
-  <!-- Right Face -->
-  <polygon points="12 11.6 21 6.8 21 16.8 12 21.6" fill="#11151c" stroke="#58a6ff" stroke-width="1.8"/>
-  
-  <!-- Dots on Top Face (Value 3 - diagonal) -->
-  <circle cx="7.5" cy="5.2" r="1.1" fill="#f0f6fc" stroke="none"/>
-  <circle cx="12" cy="6.8" r="1.1" fill="#f0f6fc" stroke="none"/>
-  <circle cx="16.5" cy="8.4" r="1.1" fill="#f0f6fc" stroke="none"/>
-  
-  <!-- Dots on Left Face (Value 2) -->
-  <circle cx="6.5" cy="11" r="1.1" fill="#f0f6fc" stroke="none"/>
-  <circle cx="8.5" cy="17.4" r="1.1" fill="#f0f6fc" stroke="none"/>
-  
-  <!-- Dots on Right Face (Value 6) -->
-  <circle cx="15" cy="10.2" r="1.1" fill="#f0f6fc" stroke="none"/>
-  <circle cx="18" cy="8.6" r="1.1" fill="#f0f6fc" stroke="none"/>
-  <circle cx="15" cy="14" r="1.1" fill="#f0f6fc" stroke="none"/>
-  <circle cx="18" cy="12.4" r="1.1" fill="#f0f6fc" stroke="none"/>
-  <circle cx="15" cy="17.8" r="1.1" fill="#f0f6fc" stroke="none"/>
-  <circle cx="18" cy="16.2" r="1.1" fill="#f0f6fc" stroke="none"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1024" height="1024" fill="none">
+  <!-- Diamond Die Logo in #5E6FF8 with transparent cutout dots -->
+  <defs>
+    <mask id="die-cutout">
+      <rect width="24" height="24" fill="#FFFFFF"/>
+      <circle cx="12" cy="7.3" r="1.35" fill="#000000"/>
+      <circle cx="16.7" cy="12" r="1.35" fill="#000000"/>
+      <circle cx="12" cy="16.7" r="1.35" fill="#000000"/>
+      <circle cx="7.3" cy="12" r="1.35" fill="#000000"/>
+    </mask>
+  </defs>
+  <g mask="url(#die-cutout)">
+    <rect x="4.5" y="4.5" width="15" height="15" rx="3" ry="3" transform="rotate(45 12 12)" fill="#5E6FF8"/>
+  </g>
 </svg>
