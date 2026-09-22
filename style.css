@@ -687,6 +687,16 @@ body {
     text-align: center;
     outline: none;
     transition: var(--transition);
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.num-compact-input::-webkit-outer-spin-button,
+.num-compact-input::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .num-compact-input:focus {

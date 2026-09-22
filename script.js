@@ -265,18 +265,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isDecimal) {
             const results = [];
-            for (let i = 0; i < count; i++) {
-                const val = (min + cryptoRandomFloat() * (max - min)).toFixed(2);
-                results.push(parseFloat(val));
+            const seen = new Set();
+            let attempts = 0;
+            while (results.length < count && attempts < count * 100) {
+                attempts++;
+                const formatted = (min + cryptoRandomFloat() * (max - min)).toFixed(2);
+                if (unique && seen.has(formatted)) continue;
+                seen.add(formatted);
+                results.push(parseFloat(formatted));
             }
+            while (results.length < count) {
+                results.push(parseFloat((min + cryptoRandomFloat() * (max - min)).toFixed(2)));
+            }
+
             if (sortType === 'asc') results.sort((a, b) => a - b);
             if (sortType === 'desc') results.sort((a, b) => b - a);
 
-            const displayStr = results.join(', ');
+            const displayStr = results.map(n => n.toFixed(2)).join(', ');
             return {
-                primary: results.length === 1 ? results[0].toFixed(2) : `[${results.length} numbers]`,
+                primary: displayStr,
                 raw: displayStr,
-                breakdown: results.length > 1 ? results.map(n => n.toFixed(2)).join(', ') : null,
+                breakdown: results.length > 1 ? `Count: ${results.length} • Min: ${Math.min(...results).toFixed(2)} • Max: ${Math.max(...results).toFixed(2)} • Sum: ${results.reduce((a, b) => a + b, 0).toFixed(2)}` : null,
                 detailTitle: `Range: ${min} to ${max} (Decimals)`,
                 mode: 'numbers'
             };
@@ -717,47 +726,63 @@ document.addEventListener('DOMContentLoaded', () => {
         const intermediateDelays = [45, 60, 80, 105, 135, 175]; // Easing deceleration
         let tick = 0;
 
-        function runNextTick() {
-            if (tick < 6) {
-                // Ticks 1 to 6: Intermediate random values (non-final)
-                const intermediate = getCandidateResult(false);
-                if (intermediate) {
-                    primaryResultText.textContent = intermediate.primary;
-                    primaryResultText.classList.add('animating');
-                    playTickSound();
-                }
-                const delay = intermediateDelays[tick];
-                tick++;
-                setTimeout(runNextTick, delay);
-            } else {
-                // Tick 7: Final Chosen Value Lock-in!
-                const finalResult = getCandidateResult(true);
-                displayFinalResult(finalResult);
-                isRolling = false;
-                btnRoll.classList.remove('rolling');
-            }
+    function adjustPrimaryFontSize(text) {
+        if (!text) return;
+        const len = String(text).length;
+        if (len > 35) {
+            primaryResultText.style.fontSize = '1.35rem';
+        } else if (len > 20) {
+            primaryResultText.style.fontSize = '1.8rem';
+        } else if (len > 12) {
+            primaryResultText.style.fontSize = '2.2rem';
+        } else {
+            primaryResultText.style.fontSize = '';
         }
-
-        runNextTick();
     }
 
-    function displayFinalResult(result) {
-        if (!result) return;
-
-        latestResultRaw = result.raw || result.primary;
-
-        primaryResultText.classList.remove('animating');
-        primaryResultText.classList.remove('result-pop');
-        void primaryResultText.offsetWidth; // Trigger reflow for CSS keyframe
-        primaryResultText.classList.add('result-pop');
-        primaryResultText.textContent = result.primary;
-
-        if (result.breakdown) {
-            resultBreakdown.innerHTML = `<span>${result.breakdown}</span>`;
-            resultBreakdown.classList.remove('hidden');
+    function runNextTick() {
+        if (tick < 6) {
+            // Ticks 1 to 6: Intermediate random values (non-final)
+            const intermediate = getCandidateResult(false);
+            if (intermediate) {
+                adjustPrimaryFontSize(intermediate.primary);
+                primaryResultText.textContent = intermediate.primary;
+                primaryResultText.classList.add('animating');
+                playTickSound();
+            }
+            const delay = intermediateDelays[tick];
+            tick++;
+            setTimeout(runNextTick, delay);
         } else {
-            resultBreakdown.classList.add('hidden');
+            // Tick 7: Final Chosen Value Lock-in!
+            const finalResult = getCandidateResult(true);
+            displayFinalResult(finalResult);
+            isRolling = false;
+            btnRoll.classList.remove('rolling');
         }
+    }
+
+    runNextTick();
+}
+
+function displayFinalResult(result) {
+    if (!result) return;
+
+    latestResultRaw = result.raw || result.primary;
+
+    primaryResultText.classList.remove('animating');
+    primaryResultText.classList.remove('result-pop');
+    adjustPrimaryFontSize(result.primary);
+    void primaryResultText.offsetWidth; // Trigger reflow for CSS keyframe
+    primaryResultText.classList.add('result-pop');
+    primaryResultText.textContent = result.primary;
+
+    if (result.breakdown) {
+        resultBreakdown.innerHTML = `<span>${result.breakdown}</span>`;
+        resultBreakdown.classList.remove('hidden');
+    } else {
+        resultBreakdown.classList.add('hidden');
+    }
 
         // Play resolution chime
         playSuccessSound();
