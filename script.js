@@ -132,21 +132,61 @@ document.addEventListener('DOMContentLoaded', () => {
         return audioCtx;
     }
 
+    let clickNoiseBuffer = null;
+
+    function getClickNoiseBuffer(ctx) {
+        if (!clickNoiseBuffer) {
+            const length = Math.floor(ctx.sampleRate * 0.008);
+            clickNoiseBuffer = ctx.createBuffer(1, length, ctx.sampleRate);
+            const data = clickNoiseBuffer.getChannelData(0);
+            for (let i = 0; i < length; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (length * 0.25));
+            }
+        }
+        return clickNoiseBuffer;
+    }
+
     function playTickSound() {
         if (!isSoundEnabled) return;
         try {
             const ctx = getAudioContext();
             if (!ctx) return;
+            const now = ctx.currentTime;
+
+            // 1. Tactile percussive thud (pitch dropping sine 460Hz -> 65Hz in 12ms)
             const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(520 + Math.random() * 120, ctx.currentTime);
-            gain.gain.setValueAtTime(0.04, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.045);
+            const oscGain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(460, now);
+            osc.frequency.exponentialRampToValueAtTime(65, now + 0.012);
+
+            oscGain.gain.setValueAtTime(0.038, now);
+            oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.014);
+
+            osc.connect(oscGain);
+            oscGain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.015);
+
+            // 2. Crisp mechanical transient (filtered noise snap)
+            const noise = ctx.createBufferSource();
+            noise.buffer = getClickNoiseBuffer(ctx);
+
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(2600, now);
+            filter.Q.setValueAtTime(1.5, now);
+
+            const noiseGain = ctx.createGain();
+            noiseGain.gain.setValueAtTime(0.022, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.008);
+
+            noise.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(ctx.destination);
+
+            noise.start(now);
+            noise.stop(now + 0.009);
         } catch (e) {}
     }
 
