@@ -924,14 +924,18 @@ document.addEventListener('DOMContentLoaded', () => {
             row.className = 'saved-item-row';
 
             const badgeClass = `badge-${item.mode}`;
+            const titleHtml = item.title ? `<span class="item-title" title="${item.title}">${item.title}</span>` : '';
+            const colorDot = (item.mode === 'color' && item.value && item.value.startsWith('#'))
+                ? `<span class="color-swatch-mini" style="background-color: ${item.value}"></span>`
+                : '';
 
             row.innerHTML = `
-                <div class="item-left">
-                    <span class="item-num">#${historyList.length - index}</span>
-                    <span class="item-badge ${badgeClass}">${item.mode}</span>
-                </div>
-                <div class="item-right">
-                    <span class="item-value" title="${item.value}">${item.value}</span>
+                <div class="item-row-header">
+                    <div class="item-meta">
+                        <span class="item-num">#${historyList.length - index}</span>
+                        <span class="item-badge ${badgeClass}">${item.mode}</span>
+                        ${titleHtml}
+                    </div>
                     <div class="item-actions">
                         <button type="button" class="item-btn item-btn-copy" title="Copy result">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -946,6 +950,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             </svg>
                         </button>
                     </div>
+                </div>
+                <div class="item-row-body">
+                    <div class="item-value" title="${item.value}">${colorDot}${item.value}</div>
                 </div>
             `;
 

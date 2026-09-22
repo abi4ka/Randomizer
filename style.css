@@ -1273,10 +1273,10 @@ input[type="number"]::-webkit-inner-spin-button {
     background: var(--color-canvas-inset);
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-sm);
-    padding: 9px 12px;
+    padding: 8px 12px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 6px;
     transition: var(--transition);
     cursor: pointer;
 }
@@ -1286,18 +1286,27 @@ input[type="number"]::-webkit-inner-spin-button {
     border-color: var(--color-border-muted);
 }
 
-.item-left {
+.item-row-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
+    width: 100%;
+}
+
+.item-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     min-width: 0;
+    flex: 1;
 }
 
 .item-num {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: var(--color-fg-subtle);
-    min-width: 18px;
+    flex-shrink: 0;
 }
 
 .item-badge {
@@ -1307,6 +1316,7 @@ input[type="number"]::-webkit-inner-spin-button {
     padding: 1px 6px;
     border-radius: 4px;
     text-transform: uppercase;
+    flex-shrink: 0;
 }
 
 .badge-numbers {
@@ -1333,24 +1343,10 @@ input[type="number"]::-webkit-inner-spin-button {
     border: 1px solid var(--color-success-border);
 }
 
-.item-time {
+.item-title {
     font-size: 0.68rem;
     color: var(--color-fg-subtle);
     font-family: var(--font-mono);
-}
-
-.item-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.item-value {
-    font-family: var(--font-mono);
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: var(--color-fg-default);
-    max-width: 175px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1360,6 +1356,40 @@ input[type="number"]::-webkit-inner-spin-button {
     display: flex;
     align-items: center;
     gap: 2px;
+    flex-shrink: 0;
+}
+
+.item-row-body {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.item-value {
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--color-fg-default);
+    line-height: 1.45;
+    word-break: break-word;
+    width: 100%;
+    max-height: 6em;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.item-value::-webkit-scrollbar {
+    display: none;
+}
+
+.color-swatch-mini {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    vertical-align: middle;
+    margin-right: 5px;
 }
 
 .item-btn {
