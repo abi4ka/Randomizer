@@ -1,9 +1,9 @@
 /**
  * Randomizer PWA Service Worker
- * Provides reliable offline capabilities and instant loading.
+ * Provides reliable offline capabilities and instant updates.
  */
 
-const CACHE_NAME = 'randomizer-v1';
+const CACHE_NAME = 'randomizer-v2';
 
 const STATIC_ASSETS = [
     './',
@@ -17,16 +17,17 @@ const STATIC_ASSETS = [
     'assets/icons/icon-maskable-512.png'
 ];
 
-// Install: Pre-cache application shell assets
+// Install: Pre-cache application shell assets and activate immediately
 self.addEventListener('install', (event) => {
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(STATIC_ASSETS);
-        }).then(() => self.skipWaiting())
+        })
     );
 });
 
-// Activate: Clean up old cache versions and claim clients
+// Activate: Delete all previous cache versions immediately and claim all clients
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
@@ -41,21 +42,18 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch: Stale-While-Revalidate strategy with offline fallback
+// Fetch handler: Network-First for HTML navigation, Stale-While-Revalidate for assets
 self.addEventListener('fetch', (event) => {
-    // Only intercept standard GET requests
     if (event.request.method !== 'GET') return;
 
     const url = new URL(event.request.url);
-
-    // Don't intercept chrome-extension or other protocols
     if (!url.protocol.startsWith('http')) return;
 
-    event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            const fetchPromise = fetch(event.request).then((networkResponse) => {
-                // Update cache if valid response
-                if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+    // Navigation requests (HTML pages): Network-First with cache fallback for offline
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request).then((networkResponse) => {
+                if (networkResponse && networkResponse.status === 200) {
                     const responseClone = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => {
                         cache.put(event.request, responseClone);
@@ -63,13 +61,25 @@ self.addEventListener('fetch', (event) => {
                 }
                 return networkResponse;
             }).catch(() => {
-                // Offline fallback for navigation requests
-                if (event.request.mode === 'navigate') {
-                    return caches.match('./') || caches.match('index.html');
-                }
-            });
+                return caches.match('./') || caches.match('index.html');
+            })
+        );
+        return;
+    }
 
-            // Return cached response immediately if available, otherwise wait for network
+    // Static assets: Stale-While-Revalidate
+    event.respondWith(
+        caches.match(event.request).then((cachedResponse) => {
+            const fetchPromise = fetch(event.request).then((networkResponse) => {
+                if (networkResponse && networkResponse.status === 200) {
+                    const responseClone = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseClone);
+                    });
+                }
+                return networkResponse;
+            }).catch(() => null);
+
             return cachedResponse || fetchPromise;
         })
     );

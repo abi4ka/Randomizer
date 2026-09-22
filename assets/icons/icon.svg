@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1024" height="1024" fill="none">
-  <!-- Diamond Die Logo in #5E6FF8 with transparent cutout dots -->
+  <!-- Diamond Die Logo in #FFFFFF (White) with transparent cutout dots -->
   <defs>
     <mask id="die-cutout">
       <rect width="24" height="24" fill="#FFFFFF"/>
@@ -10,6 +10,6 @@
     </mask>
   </defs>
   <g mask="url(#die-cutout)">
-    <rect x="4.5" y="4.5" width="15" height="15" rx="3" ry="3" transform="rotate(45 12 12)" fill="#5E6FF8"/>
+    <rect x="4.5" y="4.5" width="15" height="15" rx="3" ry="3" transform="rotate(45 12 12)" fill="#FFFFFF"/>
   </g>
 </svg>

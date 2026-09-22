@@ -1409,6 +1409,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 navigator.serviceWorker.register('./sw.js', { scope: './' })
                     .then((reg) => {
                         console.log('PWA Service Worker registered:', reg.scope);
+                        // Check for service worker updates immediately
+                        reg.update();
                     })
                     .catch((err) => {
                         console.warn('PWA Service Worker registration failed:', err);
