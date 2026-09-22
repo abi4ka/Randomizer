@@ -5,11 +5,11 @@ A fast, private, client-side randomizer for numbers, lists, colors, dice, and co
 ## Features
 
 - **Numbers Randomizer**: Generate random numbers within any range ($n$ to $m$), with support for multi-quantity generation, unique constraints (no duplicates), decimals, and sorting (ascending / descending).
-- **Phrases & List Randomizer**: Enter items or phrases line-by-line or comma-separated, pick single or multiple items, randomly shuffle, and optionally remove selected items from the list so they do not repeat.
+- **List Randomizer**: Enter items or phrases line-by-line or comma-separated, pick single or multiple items, randomly shuffle, and optionally remove selected items from the list so they do not repeat.
 - **Color Studio**: Generate vibrant random colors in HEX, RGB, and HSL with automatic adaptive text contrast and reactive ambient background glow, or generate 5-color harmonious palettes (Random, Pastel, Complementary, Triadic, Monochromatic).
 - **Dice & Coins**: Roll standard RPG dice (D4, D6, D8, D10, D12, D20, D100) with quantity and modifiers, or flip a classic coin (Heads / Tails).
-- **6-Tick Animated Roulette**: Toggleable deceleration animation that rapidly cycles through 6 intermediate candidates before locking onto the 7th winning result with audio feedback and pop effects.
-- **Docked History Sidebar**: Log all previous rolls with timestamp, mode tag, and result. One-click copy for individual rolls or the entire history report.
+- **Animated Toggle**: Deceleration animation with synthesized audio feedback and pop effects.
+- **Docked History Sidebar**: Log all previous rolls with mode tag and result. One-click copy for individual rolls or the entire history report.
 - **Zero Dependencies & Complete Privacy**: Runs 100% locally in the browser with cryptographic fairness (`crypto.getRandomValues`) and zero tracking or server requests.
 
 ## Tech Stack

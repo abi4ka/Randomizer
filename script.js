@@ -24,6 +24,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const STORAGE_KEY_SOUND = 'randomizer_sound';
     const STORAGE_KEY_HISTORY = 'randomizer_history';
     const STORAGE_KEY_TOTAL_ROLLS = 'randomizer_total_rolls';
+    const STORAGE_KEY_SETTINGS = 'randomizer_user_settings';
+    const STORAGE_KEY_TAB_RESULTS = 'randomizer_tab_results';
+
+    // Per-tab latest results
+    let tabResults = {
+        numbers: null,
+        list: null,
+        colors: null,
+        dice: null
+    };
 
     // --- DOM Elements ---
     // Top Navbar
@@ -36,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const statCount = document.getElementById('stat-count');
     const statTotalRolls = document.getElementById('stat-total-rolls');
     const statActiveMode = document.getElementById('stat-active-mode');
-    const animIndicatorTag = document.getElementById('anim-indicator-tag');
     const toastContainer = document.getElementById('toast-container');
     const glowOrb1 = document.getElementById('glow-orb-1');
     const glowOrb2 = document.getElementById('glow-orb-2');
@@ -204,8 +213,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================================
-    // Mode Switching
+    // Mode Switching & Per-Tab Results
     // =========================================================================
+    function renderTabResult(result) {
+        if (!result) {
+            primaryResultText.textContent = '';
+            primaryResultText.style.fontSize = '';
+            latestResultRaw = '';
+            resultBreakdown.innerHTML = '';
+            resultBreakdown.classList.add('hidden');
+            statusBadge.className = 'badge';
+            statusText.textContent = 'IDLE';
+            return;
+        }
+
+        latestResultRaw = result.raw || result.primary;
+
+        primaryResultText.classList.remove('animating');
+        primaryResultText.classList.remove('result-pop');
+        adjustPrimaryFontSize(result.primary);
+        primaryResultText.textContent = result.primary;
+
+        if (result.breakdown) {
+            resultBreakdown.innerHTML = `<span>${result.breakdown}</span>`;
+            resultBreakdown.classList.remove('hidden');
+        } else {
+            resultBreakdown.classList.add('hidden');
+        }
+
+        statusBadge.className = 'badge badge-ready';
+        statusText.textContent = 'RESULT';
+
+        if (result.mode === 'color' && result.colorData) {
+            currentColorData = result.colorData;
+            renderColorPreview();
+        }
+    }
+
     function setActiveTab(tabKey) {
         if (!tabButtons[tabKey] || !modeViews[tabKey]) return;
         activeTab = tabKey;
@@ -223,16 +267,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const modeNames = {
             numbers: 'Numbers',
-            list: 'Phrases & List',
+            list: 'List',
             colors: 'Colors',
             dice: 'Dice & Coins'
         };
         statActiveMode.textContent = modeNames[tabKey] || 'Numbers';
 
-        // Re-render color preview if switching to colors
-        if (tabKey === 'colors' && !currentColorData) {
-            generateColorResult(false);
-        }
+        // Render this tab's last result (or emptiness if not rolled yet)
+        renderTabResult(tabResults[tabKey]);
+
+        // Persist active tab and settings
+        saveSettingsToStorage();
     }
 
     Object.keys(tabButtons).forEach(key => {
@@ -352,7 +397,10 @@ document.addEventListener('DOMContentLoaded', () => {
         listItemsCount.textContent = `${items.length} ${items.length === 1 ? 'item' : 'items'}`;
     }
 
-    listInput.addEventListener('input', updateListCounter);
+    listInput.addEventListener('input', () => {
+        updateListCounter();
+        saveSettingsToStorage();
+    });
 
     btnListShuffle.addEventListener('click', () => {
         const items = getListItems();
@@ -362,12 +410,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const shuffled = cryptoShuffle(items);
         listInput.value = shuffled.join('\n');
+        saveSettingsToStorage();
         showToast('List shuffled randomly');
     });
 
     btnListClear.addEventListener('click', () => {
         listInput.value = '';
         updateListCounter();
+        saveSettingsToStorage();
         showToast('List cleared');
     });
 
@@ -393,6 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const remaining = items.filter(item => !picked.includes(item));
             listInput.value = remaining.join('\n');
             updateListCounter();
+            saveSettingsToStorage();
         }
 
         const primary = picked.length === 1 ? picked[0] : picked.join(' • ');
@@ -505,24 +556,33 @@ document.addEventListener('DOMContentLoaded', () => {
         return colors;
     }
 
-    btnColorSingle.addEventListener('click', () => {
-        activeColorMode = 'single';
-        btnColorSingle.classList.add('active');
-        btnColorPalette.classList.remove('active');
-        paletteTypeWrapper.classList.add('hidden');
+    function setColorSubmode(mode) {
+        activeColorMode = mode;
+        if (mode === 'palette') {
+            btnColorPalette.classList.add('active');
+            btnColorSingle.classList.remove('active');
+            paletteTypeWrapper.classList.remove('hidden');
+        } else {
+            btnColorSingle.classList.add('active');
+            btnColorPalette.classList.remove('active');
+            paletteTypeWrapper.classList.add('hidden');
+        }
         renderColorPreview();
+    }
+
+    btnColorSingle.addEventListener('click', () => {
+        setColorSubmode('single');
+        saveSettingsToStorage();
     });
 
     btnColorPalette.addEventListener('click', () => {
-        activeColorMode = 'palette';
-        btnColorPalette.classList.add('active');
-        btnColorSingle.classList.remove('active');
-        paletteTypeWrapper.classList.remove('hidden');
-        renderColorPreview();
+        setColorSubmode('palette');
+        saveSettingsToStorage();
     });
 
     selectPaletteType.addEventListener('change', () => {
         activePaletteType = selectPaletteType.value;
+        saveSettingsToStorage();
         if (activeColorMode === 'palette') {
             generateColorResult(false);
         }
@@ -597,7 +657,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 raw: `${color.hex} • ${color.rgb} • ${color.hsl}`,
                 breakdown: `${color.rgb} • ${color.hsl}`,
                 detailTitle: 'Single Color',
-                mode: 'color'
+                mode: 'color',
+                colorData: color
             };
         } else {
             const palette = generateColorPalette(activePaletteType);
@@ -610,7 +671,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 raw: hexList,
                 breakdown: `5-Color Palette (${activePaletteType.toUpperCase()})`,
                 detailTitle: 'Color Palette',
-                mode: 'color'
+                mode: 'color',
+                colorData: palette
             };
         }
     }
@@ -618,27 +680,44 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================================
     // Mode 4: Dice & Coins Logic (Direct 1-Coin Flip, No clutter)
     // =========================================================================
+    function setDiceSubmode(mode) {
+        activeDiceSubmode = mode;
+        if (mode === 'coin') {
+            btnSubmodeCoin.classList.add('active');
+            btnSubmodeDice.classList.remove('active');
+            coinControlsSection.classList.remove('hidden');
+            diceControlsSection.classList.add('hidden');
+        } else {
+            btnSubmodeDice.classList.add('active');
+            btnSubmodeCoin.classList.remove('active');
+            diceControlsSection.classList.remove('hidden');
+            coinControlsSection.classList.add('hidden');
+        }
+    }
+
+    function setDiceSides(sides) {
+        activeDiceSides = sides;
+        document.querySelectorAll('.dice-type-btn').forEach(b => {
+            const s = parseInt(b.getAttribute('data-sides'), 10);
+            b.classList.toggle('active', s === sides);
+        });
+    }
+
     btnSubmodeDice.addEventListener('click', () => {
-        activeDiceSubmode = 'dice';
-        btnSubmodeDice.classList.add('active');
-        btnSubmodeCoin.classList.remove('active');
-        diceControlsSection.classList.remove('hidden');
-        coinControlsSection.classList.add('hidden');
+        setDiceSubmode('dice');
+        saveSettingsToStorage();
     });
 
     btnSubmodeCoin.addEventListener('click', () => {
-        activeDiceSubmode = 'coin';
-        btnSubmodeCoin.classList.add('active');
-        btnSubmodeDice.classList.remove('active');
-        coinControlsSection.classList.remove('hidden');
-        diceControlsSection.classList.add('hidden');
+        setDiceSubmode('coin');
+        saveSettingsToStorage();
     });
 
     document.querySelectorAll('.dice-type-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.dice-type-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            activeDiceSides = parseInt(btn.getAttribute('data-sides'), 10) || 6;
+            const sides = parseInt(btn.getAttribute('data-sides'), 10) || 6;
+            setDiceSides(sides);
+            saveSettingsToStorage();
         });
     });
 
@@ -768,6 +847,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function displayFinalResult(result) {
     if (!result) return;
 
+    tabResults[activeTab] = result;
+    saveTabResultsToStorage();
+
     latestResultRaw = result.raw || result.primary;
 
     primaryResultText.classList.remove('animating');
@@ -784,31 +866,30 @@ function displayFinalResult(result) {
         resultBreakdown.classList.add('hidden');
     }
 
-        // Play resolution chime
-        playSuccessSound();
+    // Play resolution chime
+    playSuccessSound();
 
-        // Status badge update
-        statusBadge.className = 'badge badge-ready';
-        statusText.textContent = 'RESULT';
+    // Status badge update
+    statusBadge.className = 'badge badge-ready';
+    statusText.textContent = 'RESULT';
 
-        // Increment roll counter
-        totalRollsCount++;
-        statTotalRolls.textContent = String(totalRollsCount);
-        try {
-            localStorage.setItem(STORAGE_KEY_TOTAL_ROLLS, String(totalRollsCount));
-        } catch (e) {}
+    // Increment roll counter
+    totalRollsCount++;
+    statTotalRolls.textContent = String(totalRollsCount);
+    try {
+        localStorage.setItem(STORAGE_KEY_TOTAL_ROLLS, String(totalRollsCount));
+    } catch (e) {}
 
-        // Add to history
-        addHistoryItem(result);
-    }
+    // Add to history
+    addHistoryItem(result);
+}
 
     // =========================================================================
-    // History Management (Time-Calculator Style)
+    // History Management (Time-Calculator Style, No Timestamps)
     // =========================================================================
     function addHistoryItem(result) {
         const item = {
             id: Date.now() + '-' + Math.random().toString(36).substr(2, 4),
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
             mode: result.mode,
             title: result.detailTitle,
             value: result.primary,
@@ -854,7 +935,6 @@ function displayFinalResult(result) {
                 <div class="item-left">
                     <span class="item-num">#${historyList.length - index}</span>
                     <span class="item-badge ${badgeClass}">${item.mode}</span>
-                    <span class="item-time">${item.time}</span>
                 </div>
                 <div class="item-right">
                     <span class="item-value" title="${item.value}">${item.value}</span>
@@ -910,7 +990,7 @@ function displayFinalResult(result) {
             showToast('History is empty');
             return;
         }
-        const text = historyList.map(h => `[${h.time}] (${h.mode.toUpperCase()}) ${h.value}`).join('\n');
+        const text = historyList.map(h => `(${h.mode.toUpperCase()}) ${h.value}`).join('\n');
         copyTextToClipboard(text, 'All history copied to clipboard');
         if (copySummaryText) {
             const prev = copySummaryText.textContent;
@@ -982,7 +1062,7 @@ function displayFinalResult(result) {
     }
 
     btnCopyResult.addEventListener('click', () => {
-        if (!latestResultRaw || latestResultRaw === 'READY') {
+        if (!latestResultRaw) {
             showToast('No result to copy yet');
             return;
         }
@@ -994,12 +1074,9 @@ function displayFinalResult(result) {
     // =========================================================================
     toggleAnimated.addEventListener('change', () => {
         isAnimated = toggleAnimated.checked;
-        animIndicatorTag.textContent = isAnimated ? '6-Tick Roulette' : 'Instant Pick';
-        animIndicatorTag.classList.toggle('anim-active', isAnimated);
         try {
             localStorage.setItem(STORAGE_KEY_ANIMATED, isAnimated ? '1' : '0');
         } catch (e) {}
-        showToast(`Animation ${isAnimated ? 'Enabled' : 'Disabled'}`);
     });
 
     btnToggleSound.addEventListener('click', () => {
@@ -1024,6 +1101,29 @@ function displayFinalResult(result) {
         }
     }
 
+    // Auto-save setting changes on inputs
+    numMin.addEventListener('input', saveSettingsToStorage);
+    numMax.addEventListener('input', saveSettingsToStorage);
+    numCount.addEventListener('input', saveSettingsToStorage);
+    checkUnique.addEventListener('change', saveSettingsToStorage);
+    checkDecimals.addEventListener('change', () => {
+        if (checkDecimals.checked) {
+            numMin.step = 'any';
+            numMax.step = 'any';
+        } else {
+            numMin.step = '1';
+            numMax.step = '1';
+        }
+        saveSettingsToStorage();
+    });
+    numSort.addEventListener('change', saveSettingsToStorage);
+
+    listPickCount.addEventListener('input', saveSettingsToStorage);
+    checkListRemove.addEventListener('change', saveSettingsToStorage);
+
+    diceCount.addEventListener('input', saveSettingsToStorage);
+    diceModifier.addEventListener('input', saveSettingsToStorage);
+
     // Primary Roll Button
     btnRoll.addEventListener('click', executeRoll);
 
@@ -1046,6 +1146,123 @@ function displayFinalResult(result) {
     });
 
     // =========================================================================
+    // Persistence: Settings & Per-Tab Results
+    // =========================================================================
+    function saveTabResultsToStorage() {
+        try {
+            localStorage.setItem(STORAGE_KEY_TAB_RESULTS, JSON.stringify(tabResults));
+        } catch (e) {}
+    }
+
+    function loadTabResultsFromStorage() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY_TAB_RESULTS);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    tabResults = {
+                        numbers: parsed.numbers || null,
+                        list: parsed.list || null,
+                        colors: parsed.colors || null,
+                        dice: parsed.dice || null
+                    };
+                }
+            }
+        } catch (e) {}
+    }
+
+    function saveSettingsToStorage() {
+        const settings = {
+            activeTab,
+            numbers: {
+                min: numMin.value,
+                max: numMax.value,
+                count: numCount.value,
+                unique: checkUnique.checked,
+                decimals: checkDecimals.checked,
+                sort: numSort.value
+            },
+            list: {
+                items: listInput.value,
+                pickCount: listPickCount.value,
+                removeChosen: checkListRemove.checked
+            },
+            colors: {
+                mode: activeColorMode,
+                paletteType: selectPaletteType.value
+            },
+            dice: {
+                submode: activeDiceSubmode,
+                sides: activeDiceSides,
+                count: diceCount.value,
+                modifier: diceModifier.value
+            }
+        };
+        try {
+            localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+        } catch (e) {}
+    }
+
+    function loadSettingsFromStorage() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
+            if (!raw) return;
+            const s = JSON.parse(raw);
+            if (!s || typeof s !== 'object') return;
+
+            // Numbers
+            if (s.numbers) {
+                if (s.numbers.min !== undefined) numMin.value = s.numbers.min;
+                if (s.numbers.max !== undefined) numMax.value = s.numbers.max;
+                if (s.numbers.count !== undefined) numCount.value = s.numbers.count;
+                if (s.numbers.unique !== undefined) checkUnique.checked = !!s.numbers.unique;
+                if (s.numbers.decimals !== undefined) {
+                    checkDecimals.checked = !!s.numbers.decimals;
+                    numMin.step = checkDecimals.checked ? 'any' : '1';
+                    numMax.step = checkDecimals.checked ? 'any' : '1';
+                }
+                if (s.numbers.sort !== undefined) numSort.value = s.numbers.sort;
+            }
+
+            // List
+            if (s.list) {
+                if (s.list.items !== undefined) listInput.value = s.list.items;
+                if (s.list.pickCount !== undefined) listPickCount.value = s.list.pickCount;
+                if (s.list.removeChosen !== undefined) checkListRemove.checked = !!s.list.removeChosen;
+                updateListCounter();
+            }
+
+            // Colors
+            if (s.colors) {
+                if (s.colors.mode === 'palette' || s.colors.mode === 'single') {
+                    setColorSubmode(s.colors.mode);
+                }
+                if (s.colors.paletteType && selectPaletteType) {
+                    selectPaletteType.value = s.colors.paletteType;
+                    activePaletteType = s.colors.paletteType;
+                }
+            }
+
+            // Dice
+            if (s.dice) {
+                if (s.dice.submode === 'coin' || s.dice.submode === 'dice') {
+                    setDiceSubmode(s.dice.submode);
+                }
+                if (s.dice.sides !== undefined) {
+                    setDiceSides(parseInt(s.dice.sides, 10) || 6);
+                }
+                if (s.dice.count !== undefined) diceCount.value = s.dice.count;
+                if (s.dice.modifier !== undefined) diceModifier.value = s.dice.modifier;
+            }
+
+            // Active Tab
+            if (s.activeTab && tabButtons[s.activeTab]) {
+                activeTab = s.activeTab;
+            }
+        } catch (e) {}
+    }
+
+    // =========================================================================
     // Initialization & State Restoration
     // =========================================================================
     function init() {
@@ -1057,8 +1274,6 @@ function displayFinalResult(result) {
                 toggleAnimated.checked = isAnimated;
             }
         } catch (e) {}
-        animIndicatorTag.textContent = isAnimated ? '6-Tick Roulette' : 'Instant Pick';
-        animIndicatorTag.classList.toggle('anim-active', isAnimated);
 
         // Restore Sound state
         try {
@@ -1088,15 +1303,20 @@ function displayFinalResult(result) {
         } catch (e) {}
         renderHistoryList();
 
+        // Restore Settings
+        loadSettingsFromStorage();
+
+        // Restore Per-tab Results
+        loadTabResultsFromStorage();
+
         // Initialize default list if empty
         if (!listInput.value.trim()) {
             listInput.value = 'Option 1\nOption 2\nOption 3';
         }
         updateListCounter();
 
-        // Preload color state
-        currentColorData = generateRandomColor();
-        renderColorPreview();
+        // Set active tab (which also renders tab's last result or emptiness)
+        setActiveTab(activeTab);
     }
 
     init();

@@ -650,6 +650,16 @@ body {
     justify-content: center;
 }
 
+.time-arrow-indicator.range-colon-indicator {
+    color: var(--color-fg-muted);
+    font-family: var(--font-mono);
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1;
+    user-select: none;
+    padding-top: 20px;
+}
+
 /* Options Bar & Checkboxes */
 .options-bar {
     display: flex;
@@ -1352,7 +1362,7 @@ input[type="number"]::-webkit-inner-spin-button {
     font-size: 0.88rem;
     font-weight: 600;
     color: var(--color-fg-default);
-    max-width: 130px;
+    max-width: 175px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1514,6 +1524,11 @@ input[type="number"]::-webkit-inner-spin-button {
     .time-arrow-indicator {
         transform: rotate(90deg);
         padding: 4px 0;
+    }
+    .time-arrow-indicator.range-colon-indicator {
+        transform: none;
+        padding-top: 0;
+        margin: -4px 0;
     }
     .duration-glow {
         font-size: 2.1rem;

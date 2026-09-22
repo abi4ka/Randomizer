@@ -62,9 +62,9 @@
 
             <!-- Global Status & Quick Stats -->
             <div class="nav-center">
-                <div id="status-badge" class="badge badge-ready">
+                <div id="status-badge" class="badge">
                     <span class="status-dot"></span>
-                    <span id="status-text">READY</span>
+                    <span id="status-text">IDLE</span>
                 </div>
 
                 <div class="stats-group">
@@ -151,7 +151,7 @@
                                     <line x1="3" y1="12" x2="3.01" y2="12"></line>
                                     <line x1="3" y1="18" x2="3.01" y2="18"></line>
                                 </svg>
-                                Phrases & List
+                                List
                             </button>
                             <button id="tab-colors" class="tab-btn" role="tab" aria-selected="false">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -188,13 +188,8 @@
                                     </div>
                                 </div>
 
-                                <!-- Center Arrow Indicator -->
-                                <div class="time-arrow-indicator">
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        <polyline points="12 5 19 12 12 19"></polyline>
-                                    </svg>
-                                </div>
+                                <!-- Center Colon Indicator -->
+                                <div class="time-arrow-indicator range-colon-indicator" aria-hidden="true">:</div>
 
                                 <!-- Max Value (m) Box -->
                                 <div class="time-box range-box">
@@ -356,7 +351,6 @@
                             <div class="result-banner-header">
                                 <span class="result-label" id="result-stage-label">RESULT</span>
                                 <div class="result-header-actions">
-                                    <span id="anim-indicator-tag" class="badge-mini anim-active">6-Tick Roulette</span>
                                     <button type="button" id="btn-copy-result" class="result-action-btn" title="Copy result to clipboard">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -369,7 +363,7 @@
 
                             <!-- Primary Result Container -->
                             <div class="result-main-value" id="result-display-stage">
-                                <span id="primary-result-text" class="duration-glow">READY</span>
+                                <span id="primary-result-text" class="duration-glow"></span>
                             </div>
 
                             <!-- Secondary Result Details / Breakdown -->
@@ -390,7 +384,6 @@
                                     <circle cx="16.5" cy="14" r="1.1" fill="currentColor" stroke="none"/>
                                 </svg>
                                 <span class="btn-text" id="btn-roll-text">Roll / Generate</span>
-                                <span class="btn-shortcut-hint">Space / Enter</span>
                             </button>
                         </div>
                     </div>
