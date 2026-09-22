@@ -335,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 primary: displayStr,
                 raw: displayStr,
                 breakdown: results.length > 1 ? `Count: ${results.length} • Min: ${Math.min(...results).toFixed(2)} • Max: ${Math.max(...results).toFixed(2)} • Sum: ${results.reduce((a, b) => a + b, 0).toFixed(2)}` : null,
-                detailTitle: `Range: ${min} to ${max} (Decimals)`,
+                detailTitle: `${min} to ${max}`,
                 mode: 'numbers'
             };
         }
@@ -369,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
             primary: results.length === 1 ? String(results[0]) : results.join(', '),
             raw: displayStr,
             breakdown: results.length > 1 ? `Count: ${results.length} • Min: ${Math.min(...results)} • Max: ${Math.max(...results)} • Sum: ${results.reduce((a, b) => a + b, 0)}` : null,
-            detailTitle: `Range: ${intMin} – ${intMax}`,
+            detailTitle: `${intMin} to ${intMax}`,
             mode: 'numbers'
         };
     }
@@ -455,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
             primary: primary,
             raw: picked.join(', '),
             breakdown: picked.length > 1 ? `Picked ${picked.length} of ${items.length} items` : `Picked 1 of ${items.length} items`,
-            detailTitle: 'List Pick',
+            detailTitle: '',
             mode: 'list'
         };
     }
@@ -924,7 +924,14 @@ document.addEventListener('DOMContentLoaded', () => {
             row.className = 'saved-item-row';
 
             const badgeClass = `badge-${item.mode}`;
-            const titleHtml = item.title ? `<span class="item-title" title="${item.title}">${item.title}</span>` : '';
+            let displayTitle = item.title || '';
+            if (item.mode === 'list' && displayTitle.toLowerCase().includes('list pick')) {
+                displayTitle = '';
+            }
+            if (item.mode === 'numbers') {
+                displayTitle = displayTitle.replace(/^Range:\s*/i, '').replace(/\s*\(Decimals\)/i, '').replace('–', 'to').trim();
+            }
+            const titleHtml = displayTitle ? `<span class="item-title" title="${displayTitle}">${displayTitle}</span>` : '';
             const colorDot = (item.mode === 'color' && item.value && item.value.startsWith('#'))
                 ? `<span class="color-swatch-mini" style="background-color: ${item.value}"></span>`
                 : '';
