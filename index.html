@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Randomizer — Fast, Flexible & Animated</title>
+    <meta name="description" content="Fast, private, client-side randomizer for numbers, phrases, colors, dice, and coins with animated roulette rolling.">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Randomizer — Fast, Flexible & Animated">
+    <meta property="og:description" content="Fast, private, client-side randomizer for numbers, phrases, colors, dice, and coins with smooth rolling animation.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Ambient Background Glow Orbs -->
+    <div class="ambient-bg" aria-hidden="true">
+        <div id="glow-orb-1" class="glow-orb orb-1"></div>
+        <div id="glow-orb-2" class="glow-orb orb-2"></div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <div class="app-layout">
+        <!-- Top Navigation Bar -->
+        <header class="navbar">
+            <div class="nav-brand">
+                <div class="brand-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Isometric 3D Playing Die -->
+                        <polygon points="12 2 21 6.8 12 11.6 3 6.8" fill="#161b22" stroke="currentColor"/>
+                        <polygon points="3 6.8 12 11.6 12 21.6 3 16.8" fill="#0d1117" stroke="currentColor"/>
+                        <polygon points="12 11.6 21 6.8 21 16.8 12 21.6" fill="#11151c" stroke="currentColor"/>
+                        <!-- Pips / Dots -->
+                        <circle cx="7.5" cy="5.2" r="1.1" fill="currentColor" stroke="none"/>
+                        <circle cx="12" cy="6.8" r="1.1" fill="currentColor" stroke="none"/>
+                        <circle cx="16.5" cy="8.4" r="1.1" fill="currentColor" stroke="none"/>
+                        <circle cx="6.5" cy="11" r="1.1" fill="currentColor" stroke="none"/>
+                        <circle cx="8.5" cy="17.4" r="1.1" fill="currentColor" stroke="none"/>
+                        <circle cx="15" cy="10.2" r="1.1" fill="currentColor" stroke="none"/>
+                        <circle cx="18" cy="8.6" r="1.1" fill="currentColor" stroke="none"/>
+                        <circle cx="15" cy="14" r="1.1" fill="currentColor" stroke="none"/>
+                        <circle cx="18" cy="12.4" r="1.1" fill="currentColor" stroke="none"/>
+                        <circle cx="15" cy="17.8" r="1.1" fill="currentColor" stroke="none"/>
+                        <circle cx="18" cy="16.2" r="1.1" fill="currentColor" stroke="none"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>RANDOMIZER</h1>
+                </div>
+            </div>
+
+            <!-- Global Status & Quick Stats -->
+            <div class="nav-center">
+                <div id="status-badge" class="badge badge-ready">
+                    <span class="status-dot"></span>
+                    <span id="status-text">READY</span>
+                </div>
+
+                <div class="stats-group">
+                    <span class="stat-item" title="Total saved rolls">
+                        <span class="stat-label">Saved:</span>
+                        <strong id="stat-count">0</strong>
+                    </span>
+                    <span class="stat-separator">•</span>
+                    <span class="stat-item" title="Total rolls made in current session">
+                        <span class="stat-label">Rolls:</span>
+                        <strong id="stat-total-rolls">0</strong>
+                    </span>
+                    <span class="stat-separator">•</span>
+                    <span class="stat-item" title="Active mode">
+                        <span class="stat-label">Mode:</span>
+                        <strong id="stat-active-mode">Numbers</strong>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Global Actions & Switches -->
+            <div class="nav-actions">
+                <!-- Animated Switch Toggle -->
+                <div class="nav-switch-wrapper" title="Toggle rolling animation before picking the final result">
+                    <span class="switch-label">Animated</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-animated" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Sound Effects Toggle -->
+                <button type="button" id="btn-toggle-sound" class="btn btn-secondary btn-icon-only active" title="Toggle audio sound effects">
+                    <svg id="icon-sound-on" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                    <svg id="icon-sound-off" class="hidden" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <line x1="23" y1="9" x2="17" y2="15"></line>
+                        <line x1="17" y1="9" x2="23" y2="15"></line>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Application Workspace with Centered Stage and Docked Right Sidebar -->
+        <div class="main-app-body">
+            <!-- Center Stage Scroll Container -->
+            <div class="center-stage-container">
+                <!-- CENTER STAGE: Randomizer Workspace Card -->
+                <main class="calc-center-card" aria-label="Randomizer Workspace">
+                    <div class="card-header">
+                        <div class="card-header-left">
+                            <div class="mode-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="16 3 21 3 21 8"></polyline>
+                                    <line x1="4" y1="20" x2="21" y2="3"></line>
+                                    <polyline points="21 16 21 21 16 21"></polyline>
+                                    <line x1="15" y1="15" x2="21" y2="21"></line>
+                                    <line x1="4" y1="4" x2="9" y2="9"></line>
+                                </svg>
+                            </div>
+                            <span class="card-title">RANDOM GENERATOR</span>
+                        </div>
+
+                        <!-- Mode Switcher Tabs -->
+                        <div class="view-switch" role="tablist">
+                            <button id="tab-numbers" class="tab-btn active" role="tab" aria-selected="true">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="4" y1="9" x2="20" y2="9"></line>
+                                    <line x1="4" y1="15" x2="20" y2="15"></line>
+                                    <line x1="10" y1="3" x2="8" y2="21"></line>
+                                    <line x1="16" y1="3" x2="14" y2="21"></line>
+                                </svg>
+                                Numbers
+                            </button>
+                            <button id="tab-list" class="tab-btn" role="tab" aria-selected="false">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                </svg>
+                                Phrases & List
+                            </button>
+                            <button id="tab-colors" class="tab-btn" role="tab" aria-selected="false">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
+                                    <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
+                                    <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                                    <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
+                                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C22 6.5 17.5 2 12 2z"></path>
+                                </svg>
+                                Colors
+                            </button>
+                            <button id="tab-dice" class="tab-btn" role="tab" aria-selected="false">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <polygon points="12 2 21 6.8 12 11.6 3 6.8" fill="none" stroke="currentColor"/>
+                                    <polygon points="3 6.8 12 11.6 12 21.6 3 16.8" fill="none" stroke="currentColor"/>
+                                    <polygon points="12 11.6 21 6.8 21 16.8 12 21.6" fill="none" stroke="currentColor"/>
+                                </svg>
+                                Dice & Coins
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="calc-card-body">
+                        <!-- MODE 1: NUMBERS (FROM n TO m) -->
+                        <div id="mode-numbers-view" class="calc-mode-view">
+                            <div class="time-inputs-grid range-inputs-grid">
+                                <!-- Min Value (n) Box -->
+                                <div class="time-box range-box">
+                                    <div class="time-box-top">
+                                        <span class="time-badge start-badge">FROM (N)</span>
+                                    </div>
+                                    <div class="custom-time-input-wrap">
+                                        <input type="number" id="num-min" class="time-digit-input num-input" value="1" step="1" aria-label="From Value">
+                                    </div>
+                                </div>
+
+                                <!-- Center Arrow Indicator -->
+                                <div class="time-arrow-indicator">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </div>
+
+                                <!-- Max Value (m) Box -->
+                                <div class="time-box range-box">
+                                    <div class="time-box-top">
+                                        <span class="time-badge end-badge">TO (M)</span>
+                                    </div>
+                                    <div class="custom-time-input-wrap">
+                                        <input type="number" id="num-max" class="time-digit-input num-input" value="10" step="1" aria-label="To Value">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Options Bar -->
+                            <div class="options-bar numbers-options-bar">
+                                <div class="option-field">
+                                    <label for="num-count" class="field-label">Quantity:</label>
+                                    <input type="number" id="num-count" class="num-compact-input" value="1" min="1" max="100">
+                                </div>
+
+                                <label class="custom-checkbox">
+                                    <input type="checkbox" id="check-unique" checked>
+                                    <span class="checkbox-box"></span>
+                                    <span class="checkbox-text">Unique only</span>
+                                </label>
+
+                                <label class="custom-checkbox">
+                                    <input type="checkbox" id="check-decimals">
+                                    <span class="checkbox-box"></span>
+                                    <span class="checkbox-text">Decimals</span>
+                                </label>
+
+                                <div class="option-field">
+                                    <label for="num-sort" class="field-label">Sort:</label>
+                                    <select id="num-sort" class="select-compact">
+                                        <option value="none">As Rolled</option>
+                                        <option value="asc">Ascending (↑)</option>
+                                        <option value="desc">Descending (↓)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MODE 2: LIST / PHRASES -->
+                        <div id="mode-list-view" class="calc-mode-view hidden">
+                            <div class="list-editor-box">
+                                <div class="list-editor-top">
+                                    <div class="list-editor-info">
+                                        <span class="field-label">Phrases / Items (one per line or comma-separated):</span>
+                                        <span id="list-items-count" class="badge-mini">0 items</span>
+                                    </div>
+                                    <div class="list-editor-actions">
+                                        <button type="button" id="btn-list-shuffle" class="btn btn-secondary btn-sm" title="Shuffle list randomly">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="16 3 21 3 21 8"></polyline>
+                                                <line x1="4" y1="20" x2="21" y2="3"></line>
+                                                <polyline points="21 16 21 21 16 21"></polyline>
+                                                <line x1="15" y1="15" x2="21" y2="21"></line>
+                                                <line x1="4" y1="4" x2="9" y2="9"></line>
+                                            </svg>
+                                            Shuffle
+                                        </button>
+                                        <button type="button" id="btn-list-clear" class="btn btn-secondary btn-sm btn-danger-hover" title="Clear list">
+                                            Clear
+                                        </button>
+                                    </div>
+                                </div>
+                                <textarea id="list-input" class="list-textarea" rows="6" placeholder="Enter items or phrases here, e.g.:&#10;Option 1&#10;Option 2&#10;Option 3" spellcheck="false"></textarea>
+                            </div>
+
+                            <!-- List Options Bar -->
+                            <div class="options-bar">
+                                <div class="option-field">
+                                    <label for="list-pick-count" class="field-label">Pick:</label>
+                                    <input type="number" id="list-pick-count" class="num-compact-input" value="1" min="1" max="50">
+                                </div>
+
+                                <label class="custom-checkbox" title="Remove the chosen item from the textarea so it does not repeat in future rolls">
+                                    <input type="checkbox" id="check-list-remove">
+                                    <span class="checkbox-box"></span>
+                                    <span class="checkbox-text">Remove chosen item from list</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- MODE 3: COLORS -->
+                        <div id="mode-colors-view" class="calc-mode-view hidden">
+                            <!-- Color Submode Switcher -->
+                            <div class="color-controls-bar">
+                                <div class="color-segmented-control" role="group" aria-label="Color Mode">
+                                    <button type="button" id="btn-color-single" class="segment-btn active">Single Color</button>
+                                    <button type="button" id="btn-color-palette" class="segment-btn">Palette (5 Colors)</button>
+                                </div>
+
+                                <div id="palette-type-wrapper" class="option-field hidden">
+                                    <label for="select-palette-type" class="field-label">Harmony:</label>
+                                    <select id="select-palette-type" class="select-compact">
+                                        <option value="random">Random Mix</option>
+                                        <option value="pastel">Pastel</option>
+                                        <option value="complementary">Complementary</option>
+                                        <option value="triadic">Triadic</option>
+                                        <option value="monochrome">Monochromatic</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Color Preview Stage -->
+                            <div id="color-preview-container" class="color-preview-container">
+                                <!-- Populated dynamically by script.js -->
+                            </div>
+                        </div>
+
+                        <!-- MODE 4: DICE & COINS -->
+                        <div id="mode-dice-view" class="calc-mode-view hidden">
+                            <div class="dice-submode-tabs">
+                                <div class="color-segmented-control" role="group" aria-label="Game Type">
+                                    <button type="button" id="btn-submode-dice" class="segment-btn active">Dice Roller</button>
+                                    <button type="button" id="btn-submode-coin" class="segment-btn">Coin Flip</button>
+                                </div>
+                            </div>
+
+                            <!-- DICE SECTION -->
+                            <div id="dice-controls-section" class="dice-controls-section">
+                                <div class="dice-type-selector">
+                                    <span class="field-label">Dice Type:</span>
+                                    <div class="dice-type-buttons">
+                                        <button type="button" class="dice-type-btn" data-sides="4">D4</button>
+                                        <button type="button" class="dice-type-btn active" data-sides="6">D6</button>
+                                        <button type="button" class="dice-type-btn" data-sides="8">D8</button>
+                                        <button type="button" class="dice-type-btn" data-sides="10">D10</button>
+                                        <button type="button" class="dice-type-btn" data-sides="12">D12</button>
+                                        <button type="button" class="dice-type-btn" data-sides="20">D20</button>
+                                        <button type="button" class="dice-type-btn" data-sides="100">D100</button>
+                                    </div>
+                                </div>
+
+                                <div class="options-bar dice-options-bar">
+                                    <div class="option-field">
+                                        <label for="dice-count" class="field-label">Number of Dice:</label>
+                                        <input type="number" id="dice-count" class="num-compact-input" value="1" min="1" max="12">
+                                    </div>
+                                    <div class="option-field">
+                                        <label for="dice-modifier" class="field-label">Modifier (+/-):</label>
+                                        <input type="number" id="dice-modifier" class="num-compact-input" value="0" min="-100" max="100">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- COIN SECTION -->
+                            <div id="coin-controls-section" class="coin-controls-section hidden">
+                                <div class="coin-prompt-banner">
+                                    <span class="coin-prompt-icon">🪙</span>
+                                    <span class="coin-prompt-text">Coin Flip: Click <strong>«Roll / Generate»</strong> to toss the coin (Heads or Tails).</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LIVE RESULT STAGE -->
+                        <div class="live-result-banner" id="result-banner">
+                            <div class="result-banner-header">
+                                <span class="result-label" id="result-stage-label">RESULT</span>
+                                <div class="result-header-actions">
+                                    <span id="anim-indicator-tag" class="badge-mini anim-active">6-Tick Roulette</span>
+                                    <button type="button" id="btn-copy-result" class="result-action-btn" title="Copy result to clipboard">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                        <span id="copy-btn-label">Copy</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Primary Result Container -->
+                            <div class="result-main-value" id="result-display-stage">
+                                <span id="primary-result-text" class="duration-glow">READY</span>
+                            </div>
+
+                            <!-- Secondary Result Details / Breakdown -->
+                            <div id="result-breakdown" class="result-breakdown-card hidden">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- PRIMARY ACTION GROUP -->
+                        <div class="action-btn-group">
+                            <button id="btn-roll" class="btn btn-primary btn-roll-action">
+                                <svg class="icon-dice-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="12 2 21 6.8 12 11.6 3 6.8" fill="#161b22" stroke="currentColor"/>
+                                    <polygon points="3 6.8 12 11.6 12 21.6 3 16.8" fill="#0d1117" stroke="currentColor"/>
+                                    <polygon points="12 11.6 21 6.8 21 16.8 12 21.6" fill="#11151c" stroke="currentColor"/>
+                                    <circle cx="12" cy="6.8" r="1.1" fill="currentColor" stroke="none"/>
+                                    <circle cx="7.5" cy="14" r="1.1" fill="currentColor" stroke="none"/>
+                                    <circle cx="16.5" cy="14" r="1.1" fill="currentColor" stroke="none"/>
+                                </svg>
+                                <span class="btn-text" id="btn-roll-text">Roll / Generate</span>
+                                <span class="btn-shortcut-hint">Space / Enter</span>
+                            </button>
+                        </div>
+                    </div>
+                </main>
+            </div>
+
+            <!-- RIGHT SIDEBAR: Attached to the right wall of the screen (Time-Calculator Style) -->
+            <aside class="saved-sidebar-card docked-right" aria-label="Roll History">
+                <!-- Top Actions Bar: Clear, Copy -->
+                <div class="sidebar-header-actions">
+                    <button type="button" id="btn-clear-history" class="btn btn-secondary btn-sm btn-danger-hover sidebar-top-btn" title="Clear all rolls">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        <span>Clear</span>
+                    </button>
+
+                    <button type="button" id="btn-copy-history" class="btn btn-secondary btn-sm sidebar-top-btn" title="Copy formatted text report">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <span id="copy-summary-text">Copy</span>
+                    </button>
+                </div>
+
+                <!-- Scrollable List Container -->
+                <div class="saved-list-container">
+                    <!-- Empty State -->
+                    <div id="history-empty" class="empty-state">
+                        <div class="empty-icon">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <h4>No rolls recorded yet</h4>
+                        <p>Generate a random value on the left to start tracking history.</p>
+                    </div>
+
+                    <!-- Saved Items List -->
+                    <div id="history-items-list" class="entries-items-list hidden">
+                        <!-- Dynamic History Rows -->
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
