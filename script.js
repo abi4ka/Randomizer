@@ -450,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
             saveSettingsToStorage();
         }
 
-        const primary = picked.length === 1 ? picked[0] : picked.join(' • ');
+        const primary = picked.length === 1 ? picked[0] : picked.join(', ');
         return {
             primary: primary,
             raw: picked.join(', '),
@@ -587,8 +587,8 @@ document.addEventListener('DOMContentLoaded', () => {
     selectPaletteType.addEventListener('change', () => {
         activePaletteType = selectPaletteType.value;
         saveSettingsToStorage();
-        if (activeColorMode === 'palette') {
-            generateColorResult(false);
+        if (activeTab === 'colors' && activeColorMode === 'palette') {
+            executeRoll();
         }
     });
 
@@ -658,8 +658,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return {
                 primary: color.hex,
-                raw: `${color.hex} • ${color.rgb} • ${color.hsl}`,
-                breakdown: `${color.rgb} • ${color.hsl}`,
+                raw: `${color.hex}, ${color.rgb}, ${color.hsl}`,
+                breakdown: `${color.rgb}, ${color.hsl}`,
                 detailTitle: 'Single Color',
                 mode: 'color',
                 colorData: color
@@ -671,10 +671,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const hexList = palette.map(c => c.hex).join(', ');
             return {
-                primary: palette.map(c => c.hex).join(' '),
+                primary: hexList,
                 raw: hexList,
                 breakdown: `5-Color Palette (${activePaletteType.toUpperCase()})`,
-                detailTitle: 'Color Palette',
+                detailTitle: `Color Palette (${activePaletteType})`,
                 mode: 'color',
                 colorData: palette
             };
