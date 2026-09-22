@@ -209,6 +209,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return arr;
     }
 
+    function adjustPrimaryFontSize(text) {
+        if (!text) return;
+        const len = String(text).length;
+        if (len > 35) {
+            primaryResultText.style.fontSize = '1.35rem';
+        } else if (len > 20) {
+            primaryResultText.style.fontSize = '1.8rem';
+        } else if (len > 12) {
+            primaryResultText.style.fontSize = '2.2rem';
+        } else {
+            primaryResultText.style.fontSize = '';
+        }
+    }
+
     // =========================================================================
     // Mode Switching & Per-Tab Results
     // =========================================================================
@@ -293,6 +307,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const { min, max, count, unique, isDecimal, sortType } = getNumbersConfig();
 
         if (isDecimal) {
+            const possibleDecimals = Math.round((max - min) * 100) + 1;
+            if (unique && count > possibleDecimals) {
+                showToast(`Range only contains ${possibleDecimals} unique decimals!`);
+                return null;
+            }
+
             const results = [];
             const seen = new Set();
             let attempts = 0;
@@ -774,10 +794,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!isAnimated) {
             // Instant generation (Animated OFF)
-            const finalResult = getCandidateResult(true);
-            displayFinalResult(finalResult);
-            isRolling = false;
-            btnRoll.classList.remove('rolling');
+            try {
+                const finalResult = getCandidateResult(true);
+                displayFinalResult(finalResult);
+            } catch (err) {
+                console.error("Roll execution error:", err);
+            } finally {
+                isRolling = false;
+                btnRoll.classList.remove('rolling');
+            }
             return;
         }
 
@@ -787,80 +812,71 @@ document.addEventListener('DOMContentLoaded', () => {
         const intermediateDelays = [45, 60, 80, 105, 135, 175]; // Easing deceleration
         let tick = 0;
 
-    function adjustPrimaryFontSize(text) {
-        if (!text) return;
-        const len = String(text).length;
-        if (len > 35) {
-            primaryResultText.style.fontSize = '1.35rem';
-        } else if (len > 20) {
-            primaryResultText.style.fontSize = '1.8rem';
-        } else if (len > 12) {
-            primaryResultText.style.fontSize = '2.2rem';
-        } else {
-            primaryResultText.style.fontSize = '';
-        }
-    }
-
-    function runNextTick() {
-        if (tick < 6) {
-            // Ticks 1 to 6: Intermediate random values (non-final)
-            const intermediate = getCandidateResult(false);
-            if (intermediate) {
-                adjustPrimaryFontSize(intermediate.primary);
-                primaryResultText.textContent = intermediate.primary;
-                primaryResultText.classList.add('animating');
-                playTickSound();
+        function runNextTick() {
+            if (tick < 6) {
+                // Ticks 1 to 6: Intermediate random values (non-final)
+                const intermediate = getCandidateResult(false);
+                if (intermediate) {
+                    adjustPrimaryFontSize(intermediate.primary);
+                    primaryResultText.textContent = intermediate.primary;
+                    primaryResultText.classList.add('animating');
+                    playTickSound();
+                }
+                const delay = intermediateDelays[tick];
+                tick++;
+                setTimeout(runNextTick, delay);
+            } else {
+                // Tick 7: Final Chosen Value Lock-in!
+                try {
+                    const finalResult = getCandidateResult(true);
+                    displayFinalResult(finalResult);
+                } catch (err) {
+                    console.error("Roll execution error:", err);
+                } finally {
+                    isRolling = false;
+                    btnRoll.classList.remove('rolling');
+                }
             }
-            const delay = intermediateDelays[tick];
-            tick++;
-            setTimeout(runNextTick, delay);
-        } else {
-            // Tick 7: Final Chosen Value Lock-in!
-            const finalResult = getCandidateResult(true);
-            displayFinalResult(finalResult);
-            isRolling = false;
-            btnRoll.classList.remove('rolling');
         }
+
+        runNextTick();
     }
 
-    runNextTick();
-}
+    function displayFinalResult(result) {
+        if (!result) return;
 
-function displayFinalResult(result) {
-    if (!result) return;
+        tabResults[activeTab] = result;
+        saveTabResultsToStorage();
 
-    tabResults[activeTab] = result;
-    saveTabResultsToStorage();
+        latestResultRaw = result.raw || result.primary;
 
-    latestResultRaw = result.raw || result.primary;
+        primaryResultText.classList.remove('animating');
+        primaryResultText.classList.remove('result-pop');
+        adjustPrimaryFontSize(result.primary);
+        void primaryResultText.offsetWidth; // Trigger reflow for CSS keyframe
+        primaryResultText.classList.add('result-pop');
+        primaryResultText.textContent = result.primary;
 
-    primaryResultText.classList.remove('animating');
-    primaryResultText.classList.remove('result-pop');
-    adjustPrimaryFontSize(result.primary);
-    void primaryResultText.offsetWidth; // Trigger reflow for CSS keyframe
-    primaryResultText.classList.add('result-pop');
-    primaryResultText.textContent = result.primary;
+        if (result.breakdown) {
+            resultBreakdown.innerHTML = `<span>${result.breakdown}</span>`;
+            resultBreakdown.classList.remove('hidden');
+        } else {
+            resultBreakdown.classList.add('hidden');
+        }
 
-    if (result.breakdown) {
-        resultBreakdown.innerHTML = `<span>${result.breakdown}</span>`;
-        resultBreakdown.classList.remove('hidden');
-    } else {
-        resultBreakdown.classList.add('hidden');
+        // Play resolution chime
+        playSuccessSound();
+
+        // Increment roll counter
+        totalRollsCount++;
+        statTotalRolls.textContent = String(totalRollsCount);
+        try {
+            localStorage.setItem(STORAGE_KEY_TOTAL_ROLLS, String(totalRollsCount));
+        } catch (e) {}
+
+        // Add to history
+        addHistoryItem(result);
     }
-
-    // Play resolution chime
-    playSuccessSound();
-
-    // Increment roll counter
-    totalRollsCount++;
-    statTotalRolls.textContent = String(totalRollsCount);
-    try {
-        localStorage.setItem(STORAGE_KEY_TOTAL_ROLLS, String(totalRollsCount));
-    } catch (e) {}
-
-    // Add to history
-    addHistoryItem(result);
-}
 
     // =========================================================================
     // History Management (Time-Calculator Style, No Timestamps)
