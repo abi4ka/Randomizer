@@ -5,7 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Application State ---
-    let activeTab = 'numbers'; // 'numbers' | 'list' | 'colors' | 'dice'
+    let activeTab = 'numbers'; // 'numbers' | 'list' | 'colors' | 'dice' | 'coin'
     let isAnimated = true;
     let isSoundEnabled = true;
     let isRolling = false;
@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mode-specific state
     let activeColorMode = 'single'; // 'single' | 'palette'
     let activePaletteType = 'random';
-    let activeDiceSubmode = 'dice'; // 'dice' | 'coin'
     let activeDiceSides = 6;
     let currentColorData = null;
 
@@ -32,7 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
         numbers: null,
         list: null,
         colors: null,
-        dice: null
+        dice: null,
+        coin: null
     };
 
     // --- DOM Elements ---
@@ -52,14 +52,16 @@ document.addEventListener('DOMContentLoaded', () => {
         numbers: document.getElementById('tab-numbers'),
         list: document.getElementById('tab-list'),
         colors: document.getElementById('tab-colors'),
-        dice: document.getElementById('tab-dice')
+        dice: document.getElementById('tab-dice'),
+        coin: document.getElementById('tab-coin')
     };
 
     const modeViews = {
         numbers: document.getElementById('mode-numbers-view'),
         list: document.getElementById('mode-list-view'),
         colors: document.getElementById('mode-colors-view'),
-        dice: document.getElementById('mode-dice-view')
+        dice: document.getElementById('mode-dice-view'),
+        coin: document.getElementById('mode-coin-view')
     };
 
     // Mode 1: Numbers DOM
@@ -85,13 +87,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectPaletteType = document.getElementById('select-palette-type');
     const colorPreviewContainer = document.getElementById('color-preview-container');
 
-    // Mode 4: Dice & Coins DOM
-    const btnSubmodeDice = document.getElementById('btn-submode-dice');
-    const btnSubmodeCoin = document.getElementById('btn-submode-coin');
-    const diceControlsSection = document.getElementById('dice-controls-section');
-    const coinControlsSection = document.getElementById('coin-controls-section');
+    // Mode 4: Dice DOM
     const diceCount = document.getElementById('dice-count');
     const diceModifier = document.getElementById('dice-modifier');
+
+    // Mode 5: Coin DOM
     const coinWrapper = document.getElementById('coin-wrapper');
     const coinDisc = document.getElementById('coin-disc');
     let coinRotationY = 0;
@@ -236,6 +236,9 @@ document.addEventListener('DOMContentLoaded', () => {
             latestResultRaw = '';
             resultBreakdown.innerHTML = '';
             resultBreakdown.classList.add('hidden');
+            if (activeTab === 'coin') {
+                flipCoinVisual(true, false);
+            }
             return;
         }
 
@@ -256,6 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (result.mode === 'color' && result.colorData) {
             currentColorData = result.colorData;
             renderColorPreview();
+        } else if (result.mode === 'coin' && result.isHeads !== undefined) {
+            flipCoinVisual(result.isHeads, false);
         }
     }
 
@@ -685,23 +690,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================================
-    // Mode 4: Dice & Coins Logic (Direct 1-Coin Flip, No clutter)
+    // Mode 4: Dice Logic
     // =========================================================================
-    function setDiceSubmode(mode) {
-        activeDiceSubmode = mode;
-        if (mode === 'coin') {
-            btnSubmodeCoin.classList.add('active');
-            btnSubmodeDice.classList.remove('active');
-            coinControlsSection.classList.remove('hidden');
-            diceControlsSection.classList.add('hidden');
-        } else {
-            btnSubmodeDice.classList.add('active');
-            btnSubmodeCoin.classList.remove('active');
-            diceControlsSection.classList.remove('hidden');
-            coinControlsSection.classList.add('hidden');
-        }
-    }
-
     function setDiceSides(sides) {
         activeDiceSides = sides;
         document.querySelectorAll('.dice-type-btn').forEach(b => {
@@ -710,16 +700,47 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    btnSubmodeDice.addEventListener('click', () => {
-        setDiceSubmode('dice');
-        saveSettingsToStorage();
+    document.querySelectorAll('.dice-type-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const sides = parseInt(btn.getAttribute('data-sides'), 10) || 6;
+            setDiceSides(sides);
+            saveSettingsToStorage();
+        });
     });
 
-    btnSubmodeCoin.addEventListener('click', () => {
-        setDiceSubmode('coin');
-        saveSettingsToStorage();
-    });
+    function generateDiceResult() {
+        let count = parseInt(diceCount.value, 10);
+        if (isNaN(count) || count < 1) count = 1;
+        if (count > 12) count = 12;
 
+        let mod = parseInt(diceModifier.value, 10);
+        if (isNaN(mod)) mod = 0;
+
+        const rolls = [];
+        for (let i = 0; i < count; i++) {
+            rolls.push(cryptoRandomInt(1, activeDiceSides));
+        }
+
+        const sum = rolls.reduce((a, b) => a + b, 0);
+        const total = sum + mod;
+
+        const modStr = mod > 0 ? ` + ${mod}` : (mod < 0 ? ` - ${Math.abs(mod)}` : '');
+        const breakdownStr = count > 1 || mod !== 0
+            ? `Rolls: [${rolls.join(', ')}]${modStr} = Total: ${total}`
+            : `Single D${activeDiceSides}`;
+
+        return {
+            primary: String(total),
+            raw: `${total} (${count}d${activeDiceSides}${modStr})`,
+            breakdown: breakdownStr,
+            detailTitle: `${count}d${activeDiceSides}${modStr}`,
+            mode: 'dice'
+        };
+    }
+
+    // =========================================================================
+    // Mode 5: Coin Flip Logic
+    // =========================================================================
     if (coinWrapper) {
         coinWrapper.addEventListener('click', () => {
             executeRoll();
@@ -753,57 +774,18 @@ document.addEventListener('DOMContentLoaded', () => {
         coinWrapper.classList.add('coin-tossing');
     }
 
-    document.querySelectorAll('.dice-type-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const sides = parseInt(btn.getAttribute('data-sides'), 10) || 6;
-            setDiceSides(sides);
-            saveSettingsToStorage();
-        });
-    });
+    function generateCoinResult() {
+        const isHeads = cryptoRandomFloat() < 0.5;
+        const label = isHeads ? 'Heads' : 'Tails';
 
-    function generateDiceResult() {
-        if (activeDiceSubmode === 'coin') {
-            const isHeads = cryptoRandomFloat() < 0.5;
-            const label = isHeads ? 'Heads' : 'Tails';
-            const ruLabel = isHeads ? 'Орёл' : 'Решка';
-
-            return {
-                primary: `${label} (${ruLabel})`,
-                raw: `${label} (${ruLabel})`,
-                breakdown: `Coin Flip: ${label} • ${ruLabel}`,
-                detailTitle: 'Coin Flip',
-                mode: 'dice',
-                isHeads: isHeads
-            };
-        } else {
-            let count = parseInt(diceCount.value, 10);
-            if (isNaN(count) || count < 1) count = 1;
-            if (count > 12) count = 12;
-
-            let mod = parseInt(diceModifier.value, 10);
-            if (isNaN(mod)) mod = 0;
-
-            const rolls = [];
-            for (let i = 0; i < count; i++) {
-                rolls.push(cryptoRandomInt(1, activeDiceSides));
-            }
-
-            const sum = rolls.reduce((a, b) => a + b, 0);
-            const total = sum + mod;
-
-            const modStr = mod > 0 ? ` + ${mod}` : (mod < 0 ? ` - ${Math.abs(mod)}` : '');
-            const breakdownStr = count > 1 || mod !== 0
-                ? `Rolls: [${rolls.join(', ')}]${modStr} = Total: ${total}`
-                : `Single D${activeDiceSides}`;
-
-            return {
-                primary: String(total),
-                raw: `${total} (${count}d${activeDiceSides}${modStr})`,
-                breakdown: breakdownStr,
-                detailTitle: `${count}d${activeDiceSides}${modStr}`,
-                mode: 'dice'
-            };
-        }
+        return {
+            primary: label,
+            raw: label,
+            breakdown: `Coin Toss: ${label}`,
+            detailTitle: 'Coin Toss',
+            mode: 'coin',
+            isHeads: isHeads
+        };
     }
 
     // =========================================================================
@@ -815,6 +797,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'list': return generateListResult(isFinal);
             case 'colors': return generateColorResult(true);
             case 'dice': return generateDiceResult();
+            case 'coin': return generateCoinResult();
             default: return generateNumbersResult();
         }
     }
@@ -833,7 +816,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Instant generation (Animated OFF)
             try {
                 const finalResult = getCandidateResult(true);
-                if (activeTab === 'dice' && activeDiceSubmode === 'coin' && finalResult.isHeads !== undefined) {
+                if (activeTab === 'coin' && finalResult.isHeads !== undefined) {
                     flipCoinVisual(finalResult.isHeads, false);
                 }
                 displayFinalResult(finalResult);
@@ -853,8 +836,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let tick = 0;
 
         let targetCoinResult = null;
-        if (activeTab === 'dice' && activeDiceSubmode === 'coin') {
-            targetCoinResult = generateDiceResult();
+        if (activeTab === 'coin') {
+            targetCoinResult = generateCoinResult();
             flipCoinVisual(targetCoinResult.isHeads, true);
         }
 
@@ -1229,7 +1212,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         numbers: parsed.numbers || null,
                         list: parsed.list || null,
                         colors: parsed.colors || null,
-                        dice: parsed.dice || null
+                        dice: parsed.dice || null,
+                        coin: parsed.coin || null
                     };
                 }
             }
@@ -1257,7 +1241,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 paletteType: selectPaletteType.value
             },
             dice: {
-                submode: activeDiceSubmode,
                 sides: activeDiceSides,
                 count: diceCount.value,
                 modifier: diceModifier.value
@@ -1310,9 +1293,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Dice
             if (s.dice) {
-                if (s.dice.submode === 'coin' || s.dice.submode === 'dice') {
-                    setDiceSubmode(s.dice.submode);
-                }
                 if (s.dice.sides !== undefined) {
                     setDiceSides(parseInt(s.dice.sides, 10) || 6);
                 }

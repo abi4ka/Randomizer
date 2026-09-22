@@ -168,7 +168,14 @@
                                     <polygon points="3 6.8 12 11.6 12 21.6 3 16.8" fill="none" stroke="currentColor"/>
                                     <polygon points="12 11.6 21 6.8 21 16.8 12 21.6" fill="none" stroke="currentColor"/>
                                 </svg>
-                                Dice & Coins
+                                Dice
+                            </button>
+                            <button id="tab-coin" class="tab-btn" role="tab" aria-selected="false">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="9"></circle>
+                                    <path d="M12 7v10M15 9.5a3 3 0 0 0-3-2.5 3 3 0 0 0-3 2.5c0 3.5 6 1.5 6 5a3 3 0 0 1-3 2.5 3 3 0 0 1-3-2.5"></path>
+                                </svg>
+                                Coin
                             </button>
                         </div>
                     </div>
@@ -300,70 +307,60 @@
                             </div>
                         </div>
 
-                        <!-- MODE 4: DICE & COINS -->
+                        <!-- MODE 4: DICE ROLLER -->
                         <div id="mode-dice-view" class="calc-mode-view hidden">
-                            <div class="dice-submode-tabs">
-                                <div class="color-segmented-control" role="group" aria-label="Game Type">
-                                    <button type="button" id="btn-submode-dice" class="segment-btn active">Dice Roller</button>
-                                    <button type="button" id="btn-submode-coin" class="segment-btn">Coin Flip</button>
+                            <div class="dice-type-selector">
+                                <span class="field-label">Dice Type:</span>
+                                <div class="dice-type-buttons">
+                                    <button type="button" class="dice-type-btn" data-sides="4">D4</button>
+                                    <button type="button" class="dice-type-btn active" data-sides="6">D6</button>
+                                    <button type="button" class="dice-type-btn" data-sides="8">D8</button>
+                                    <button type="button" class="dice-type-btn" data-sides="10">D10</button>
+                                    <button type="button" class="dice-type-btn" data-sides="12">D12</button>
+                                    <button type="button" class="dice-type-btn" data-sides="20">D20</button>
+                                    <button type="button" class="dice-type-btn" data-sides="100">D100</button>
                                 </div>
                             </div>
 
-                            <!-- DICE SECTION -->
-                            <div id="dice-controls-section" class="dice-controls-section">
-                                <div class="dice-type-selector">
-                                    <span class="field-label">Dice Type:</span>
-                                    <div class="dice-type-buttons">
-                                        <button type="button" class="dice-type-btn" data-sides="4">D4</button>
-                                        <button type="button" class="dice-type-btn active" data-sides="6">D6</button>
-                                        <button type="button" class="dice-type-btn" data-sides="8">D8</button>
-                                        <button type="button" class="dice-type-btn" data-sides="10">D10</button>
-                                        <button type="button" class="dice-type-btn" data-sides="12">D12</button>
-                                        <button type="button" class="dice-type-btn" data-sides="20">D20</button>
-                                        <button type="button" class="dice-type-btn" data-sides="100">D100</button>
-                                    </div>
+                            <div class="options-bar dice-options-bar">
+                                <div class="option-field">
+                                    <label for="dice-count" class="field-label">Number of Dice:</label>
+                                    <input type="number" id="dice-count" class="num-compact-input" value="1" min="1" max="12">
                                 </div>
-
-                                <div class="options-bar dice-options-bar">
-                                    <div class="option-field">
-                                        <label for="dice-count" class="field-label">Number of Dice:</label>
-                                        <input type="number" id="dice-count" class="num-compact-input" value="1" min="1" max="12">
-                                    </div>
-                                    <div class="option-field">
-                                        <label for="dice-modifier" class="field-label">Modifier (+/-):</label>
-                                        <input type="number" id="dice-modifier" class="num-compact-input" value="0" min="-100" max="100">
-                                    </div>
+                                <div class="option-field">
+                                    <label for="dice-modifier" class="field-label">Modifier (+/-):</label>
+                                    <input type="number" id="dice-modifier" class="num-compact-input" value="0" min="-100" max="100">
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- COIN SECTION: Realistic 3D Interactive Coin -->
-                            <div id="coin-controls-section" class="coin-controls-section hidden">
-                                <div class="coin-stage">
-                                    <div class="coin-wrapper" id="coin-wrapper" title="Click to flip the coin!">
-                                        <div class="coin-disc" id="coin-disc">
-                                            <!-- Front: Heads (Орёл) -->
-                                            <div class="coin-face coin-face-heads">
-                                                <svg class="coin-icon" width="38" height="38" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M12 2C10.5 4 8 5.5 5 6C5 12 8 18 12 22C16 18 19 12 19 6C16 5.5 13.5 4 12 2ZM12 4.3C13.2 5.5 15.1 6.5 17.1 7C16.8 11.6 14.4 16.3 12 19.8C9.6 16.3 7.2 11.6 6.9 7C8.9 6.5 10.8 5.5 12 4.3Z"/>
-                                                    <path d="M12 7.5L13.2 10.5L16.5 11L14 13.2L14.7 16.5L12 14.8L9.3 16.5L10 13.2L7.5 11L10.8 10.5L12 7.5Z"/>
-                                                </svg>
-                                                <span class="coin-face-title">HEADS</span>
-                                                <span class="coin-face-sub">ОРЁЛ</span>
-                                            </div>
-                                            <!-- Back: Tails (Решка) -->
-                                            <div class="coin-face coin-face-tails">
-                                                <svg class="coin-icon" width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M10 6.5L12.5 4.5V17.5H10V6.5Z"/>
-                                                    <path d="M8 17.5H16V19.5H8V17.5Z"/>
-                                                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" fill="none" stroke-dasharray="3 2"/>
-                                                </svg>
-                                                <span class="coin-face-title">TAILS</span>
-                                                <span class="coin-face-sub">РЕШКА</span>
-                                            </div>
+                        <!-- MODE 5: COIN FLIP -->
+                        <div id="mode-coin-view" class="calc-mode-view hidden">
+                            <div class="coin-stage">
+                                <div class="coin-wrapper" id="coin-wrapper" title="Click to flip the coin!">
+                                    <div class="coin-disc" id="coin-disc">
+                                        <!-- Front: Heads -->
+                                        <div class="coin-face coin-face-heads">
+                                            <svg class="coin-icon" width="38" height="38" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 2C10.5 4 8 5.5 5 6C5 12 8 18 12 22C16 18 19 12 19 6C16 5.5 13.5 4 12 2ZM12 4.3C13.2 5.5 15.1 6.5 17.1 7C16.8 11.6 14.4 16.3 12 19.8C9.6 16.3 7.2 11.6 6.9 7C8.9 6.5 10.8 5.5 12 4.3Z"/>
+                                                <path d="M12 7.5L13.2 10.5L16.5 11L14 13.2L14.7 16.5L12 14.8L9.3 16.5L10 13.2L7.5 11L10.8 10.5L12 7.5Z"/>
+                                            </svg>
+                                            <span class="coin-face-title">HEADS</span>
+                                            <span class="coin-face-sub">LIBERTY</span>
+                                        </div>
+                                        <!-- Back: Tails -->
+                                        <div class="coin-face coin-face-tails">
+                                            <svg class="coin-icon" width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M10 6.5L12.5 4.5V17.5H10V6.5Z"/>
+                                                <path d="M8 17.5H16V19.5H8V17.5Z"/>
+                                                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" fill="none" stroke-dasharray="3 2"/>
+                                            </svg>
+                                            <span class="coin-face-title">TAILS</span>
+                                            <span class="coin-face-sub">ONE COIN</span>
                                         </div>
                                     </div>
-                                    <span class="coin-subhint">Click the coin or <strong>Roll</strong> to flip</span>
                                 </div>
+                                <span class="coin-subhint">Click coin or <strong>Roll</strong> to flip</span>
                             </div>
                         </div>
 
