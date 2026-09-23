@@ -3,7 +3,7 @@
  * Provides reliable offline capabilities and instant updates.
  */
 
-const CACHE_NAME = 'randomizer-v2';
+const CACHE_NAME = 'randomizer-v3';
 
 const STATIC_ASSETS = [
     './',
@@ -61,15 +61,17 @@ self.addEventListener('fetch', (event) => {
                 }
                 return networkResponse;
             }).catch(() => {
-                return caches.match('./') || caches.match('index.html');
+                return caches.match(event.request, { ignoreSearch: true })
+                    .then((cached) => cached || caches.match('./', { ignoreSearch: true }))
+                    .then((cached) => cached || caches.match('index.html', { ignoreSearch: true }));
             })
         );
         return;
     }
 
-    // Static assets: Stale-While-Revalidate
+    // Static assets: Stale-While-Revalidate with search param tolerance
     event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
+        caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
             const fetchPromise = fetch(event.request).then((networkResponse) => {
                 if (networkResponse && networkResponse.status === 200) {
                     const responseClone = networkResponse.clone();
@@ -80,7 +82,20 @@ self.addEventListener('fetch', (event) => {
                 return networkResponse;
             }).catch(() => null);
 
-            return cachedResponse || fetchPromise;
+            if (cachedResponse) {
+                return cachedResponse;
+            }
+
+            return fetchPromise.then((networkResponse) => {
+                if (networkResponse) {
+                    return networkResponse;
+                }
+                return new Response('Network error occurred and asset is not cached', {
+                    status: 503,
+                    statusText: 'Service Unavailable',
+                    headers: { 'Content-Type': 'text/plain' }
+                });
+            });
         })
     );
 });
