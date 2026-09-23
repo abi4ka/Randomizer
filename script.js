@@ -1243,22 +1243,37 @@ document.addEventListener('DOMContentLoaded', () => {
     // Primary Roll Button
     btnRoll.addEventListener('click', executeRoll);
 
-    // Keyboard Shortcuts: Space or Enter to Roll (when not in input/textarea)
+    // Keyboard Shortcuts: Space or Enter to Roll (when not interacting with controls)
     window.addEventListener('keydown', (e) => {
-        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-        if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
-            // Allow Enter to submit if on a number input
-            if (e.key === 'Enter' && activeTag === 'input') {
+        if (e.code !== 'Space' && e.key !== 'Enter') return;
+
+        const activeEl = document.activeElement;
+        const activeTag = activeEl ? activeEl.tagName.toLowerCase() : '';
+
+        // If user is focused on a button or link, let native keyboard click activate it
+        if (activeTag === 'button' || activeTag === 'a' || (activeEl && activeEl.getAttribute('role') === 'button')) {
+            return;
+        }
+
+        // If user is in textarea or select, allow normal typing and navigation
+        if (activeTag === 'textarea' || activeTag === 'select') {
+            return;
+        }
+
+        // If in an input field:
+        if (activeTag === 'input') {
+            const inputType = activeEl.type ? activeEl.type.toLowerCase() : 'text';
+            // Allow Enter to trigger roll from number/text inputs
+            if (e.key === 'Enter' && inputType !== 'checkbox' && inputType !== 'radio') {
                 e.preventDefault();
                 executeRoll();
             }
             return;
         }
 
-        if (e.code === 'Space' || e.key === 'Enter') {
-            e.preventDefault();
-            executeRoll();
-        }
+        // Space or Enter anywhere else on the page triggers roll
+        e.preventDefault();
+        executeRoll();
     });
 
     // =========================================================================
