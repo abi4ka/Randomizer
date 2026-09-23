@@ -266,6 +266,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     // =========================================================================
     // Mode Switching & Per-Tab Results
     // =========================================================================
@@ -290,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
         primaryResultText.textContent = result.primary;
 
         if (result.breakdown) {
-            resultBreakdown.innerHTML = `<span>${result.breakdown}</span>`;
+            resultBreakdown.innerHTML = `<span>${escapeHtml(result.breakdown)}</span>`;
             resultBreakdown.classList.remove('hidden');
         } else {
             resultBreakdown.classList.add('hidden');
@@ -948,7 +958,7 @@ document.addEventListener('DOMContentLoaded', () => {
         primaryResultText.textContent = result.primary;
 
         if (result.breakdown) {
-            resultBreakdown.innerHTML = `<span>${result.breakdown}</span>`;
+            resultBreakdown.innerHTML = `<span>${escapeHtml(result.breakdown)}</span>`;
             resultBreakdown.classList.remove('hidden');
         } else {
             resultBreakdown.classList.add('hidden');
@@ -1013,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = document.createElement('div');
             row.className = 'saved-item-row';
 
-            const badgeClass = `badge-${item.mode}`;
+            const badgeClass = `badge-${escapeHtml(item.mode)}`;
             let displayTitle = item.title || '';
             if (item.mode === 'list' && displayTitle.toLowerCase().includes('list pick')) {
                 displayTitle = '';
@@ -1021,22 +1031,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item.mode === 'numbers') {
                 displayTitle = displayTitle.replace(/^Range:\s*/i, '').replace(/\s*\(Decimals\)/i, '').replace('–', 'to').trim();
             }
-            const titleHtml = displayTitle ? `<span class="item-title" title="${displayTitle}">${displayTitle}</span>` : '';
-            let valueHtml = item.value;
+            const escapedTitle = escapeHtml(displayTitle);
+            const titleHtml = escapedTitle ? `<span class="item-title" title="${escapedTitle}">${escapedTitle}</span>` : '';
+            
+            let valueHtml = escapeHtml(item.value);
             if (item.mode === 'color' && typeof item.value === 'string') {
                 const hexMatches = item.value.match(/#[0-9a-fA-F]{3,8}/g);
                 if (hexMatches && hexMatches.length > 0) {
                     valueHtml = hexMatches.map(hex => 
-                        `<span class="color-item-chip"><span class="color-swatch-mini" style="background-color: ${hex}"></span>${hex}</span>`
+                        `<span class="color-item-chip"><span class="color-swatch-mini" style="background-color: ${hex}"></span>${escapeHtml(hex)}</span>`
                     ).join(', ');
                 }
             }
+            const escapedRawValue = escapeHtml(item.value);
 
             row.innerHTML = `
                 <div class="item-row-header">
                     <div class="item-meta">
                         <span class="item-num">#${historyList.length - index}</span>
-                        <span class="item-badge ${badgeClass}">${item.mode}</span>
+                        <span class="item-badge ${badgeClass}">${escapeHtml(item.mode)}</span>
                         ${titleHtml}
                     </div>
                     <div class="item-actions">
@@ -1055,7 +1068,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <div class="item-row-body">
-                    <div class="item-value" title="${item.value}">${valueHtml}</div>
+                    <div class="item-value" title="${escapedRawValue}">${valueHtml}</div>
                 </div>
             `;
 
