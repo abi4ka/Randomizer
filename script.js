@@ -399,10 +399,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let results = [];
         if (unique) {
-            const pool = [];
-            for (let i = intMin; i <= intMax; i++) pool.push(i);
-            const shuffled = cryptoShuffle(pool);
-            results = shuffled.slice(0, count);
+            if (count === 1) {
+                results = [cryptoRandomInt(intMin, intMax)];
+            } else if (possibleCount <= 2000) {
+                const pool = [];
+                for (let i = intMin; i <= intMax; i++) pool.push(i);
+                for (let i = 0; i < count; i++) {
+                    const j = cryptoRandomInt(i, pool.length - 1);
+                    const temp = pool[i];
+                    pool[i] = pool[j];
+                    pool[j] = temp;
+                    results.push(pool[i]);
+                }
+            } else {
+                const seen = new Set();
+                while (seen.size < count) {
+                    seen.add(cryptoRandomInt(intMin, intMax));
+                }
+                results = Array.from(seen);
+            }
         } else {
             for (let i = 0; i < count; i++) {
                 results.push(cryptoRandomInt(intMin, intMax));
