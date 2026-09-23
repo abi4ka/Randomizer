@@ -382,24 +382,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const { min, max, count, unique, isDecimal, sortType } = getNumbersConfig();
 
         if (isDecimal) {
-            const possibleDecimals = Math.round((max - min) * 100) + 1;
+            const scaledMin = Math.round(min * 100);
+            const scaledMax = Math.round(max * 100);
+            const possibleDecimals = scaledMax - scaledMin + 1;
+
             if (unique && count > possibleDecimals) {
                 showToast(`Range only contains ${possibleDecimals} unique decimals!`);
                 return null;
             }
 
-            const results = [];
-            const seen = new Set();
-            let attempts = 0;
-            while (results.length < count && attempts < count * 100) {
-                attempts++;
-                const formatted = (min + cryptoRandomFloat() * (max - min)).toFixed(2);
-                if (unique && seen.has(formatted)) continue;
-                seen.add(formatted);
-                results.push(parseFloat(formatted));
-            }
-            while (results.length < count) {
-                results.push(parseFloat((min + cryptoRandomFloat() * (max - min)).toFixed(2)));
+            let results = [];
+            if (unique) {
+                if (count === 1) {
+                    results = [cryptoRandomInt(scaledMin, scaledMax) / 100];
+                } else if (possibleDecimals <= 2000) {
+                    const pool = [];
+                    for (let i = scaledMin; i <= scaledMax; i++) pool.push(i);
+                    for (let i = 0; i < count; i++) {
+                        const j = cryptoRandomInt(i, pool.length - 1);
+                        const temp = pool[i];
+                        pool[i] = pool[j];
+                        pool[j] = temp;
+                        results.push(pool[i] / 100);
+                    }
+                } else {
+                    const seen = new Set();
+                    while (seen.size < count) {
+                        seen.add(cryptoRandomInt(scaledMin, scaledMax));
+                    }
+                    results = Array.from(seen).map(n => n / 100);
+                }
+            } else {
+                for (let i = 0; i < count; i++) {
+                    results.push(cryptoRandomInt(scaledMin, scaledMax) / 100);
+                }
             }
 
             if (sortType === 'asc') results.sort((a, b) => a - b);
@@ -410,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 primary: displayStr,
                 raw: displayStr,
                 breakdown: results.length > 1 ? `Count: ${results.length} • Min: ${Math.min(...results).toFixed(2)} • Max: ${Math.max(...results).toFixed(2)} • Sum: ${results.reduce((a, b) => a + b, 0).toFixed(2)}` : null,
-                detailTitle: `${min} to ${max}`,
+                detailTitle: `${(scaledMin / 100).toFixed(2)} to ${(scaledMax / 100).toFixed(2)}`,
                 mode: 'numbers'
             };
         }
