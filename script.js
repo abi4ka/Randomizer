@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isAnimated = true;
     let isSoundEnabled = true;
     let isRolling = false;
+    let rollTimer = null;
     let totalRollsCount = 0;
     let historyList = [];
 
@@ -314,8 +315,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function cancelRollAnimation() {
+        if (rollTimer) {
+            clearTimeout(rollTimer);
+            rollTimer = null;
+        }
+        isRolling = false;
+        btnRoll.classList.remove('rolling');
+        primaryResultText.classList.remove('animating');
+    }
+
     function setActiveTab(tabKey) {
         if (!tabButtons[tabKey] || !modeViews[tabKey]) return;
+        if (tabKey === activeTab && !isRolling) return;
+
+        if (isRolling) {
+            cancelRollAnimation();
+        }
+
         activeTab = tabKey;
 
         Object.keys(tabButtons).forEach(key => {
@@ -856,8 +873,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================================
     // Core Roll Engine & The 6-Tick Animated Deceleration
     // =========================================================================
-    function getCandidateResult(isFinal = true) {
-        switch (activeTab) {
+    function getCandidateResult(tabKey = activeTab, isFinal = true) {
+        switch (tabKey) {
             case 'numbers': return generateNumbersResult();
             case 'list': return generateListResult(isFinal);
             case 'colors': return generateColorResult(true);
@@ -870,8 +887,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function executeRoll() {
         if (isRolling) return;
 
+        const rollTab = activeTab;
+
         // Verify validity before starting animation without side effects
-        const initialCheck = getCandidateResult(false);
+        const initialCheck = getCandidateResult(rollTab, false);
         if (!initialCheck) return;
 
         isRolling = true;
@@ -880,11 +899,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isAnimated) {
             // Instant generation (Animated OFF)
             try {
-                const finalResult = getCandidateResult(true);
-                if (activeTab === 'coin' && finalResult.isHeads !== undefined) {
+                const finalResult = getCandidateResult(rollTab, true);
+                if (rollTab === 'coin' && finalResult.isHeads !== undefined) {
                     flipCoinVisual(finalResult.isHeads, false);
                 }
-                displayFinalResult(finalResult);
+                displayFinalResult(finalResult, rollTab);
             } catch (err) {
                 console.error("Roll execution error:", err);
             } finally {
@@ -901,12 +920,18 @@ document.addEventListener('DOMContentLoaded', () => {
         let tick = 0;
 
         let targetCoinResult = null;
-        if (activeTab === 'coin') {
+        if (rollTab === 'coin') {
             targetCoinResult = generateCoinResult();
             flipCoinVisual(targetCoinResult.isHeads, true);
         }
 
         function runNextTick() {
+            // If user switched away or roll was cancelled, stop immediately
+            if (!isRolling || activeTab !== rollTab) {
+                cancelRollAnimation();
+                return;
+            }
+
             if (tick < 6) {
                 // Ticks 1 to 6: Intermediate random values (non-final)
                 if (targetCoinResult) {
@@ -914,7 +939,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     primaryResultText.classList.add('animating');
                     playTickSound();
                 } else {
-                    const intermediate = getCandidateResult(false);
+                    const intermediate = getCandidateResult(rollTab, false);
                     if (intermediate) {
                         adjustPrimaryFontSize(intermediate.primary);
                         primaryResultText.textContent = intermediate.primary;
@@ -924,16 +949,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const delay = intermediateDelays[tick];
                 tick++;
-                setTimeout(runNextTick, delay);
+                rollTimer = setTimeout(runNextTick, delay);
             } else {
                 // Tick 7: Final Chosen Value Lock-in!
                 try {
-                    const finalResult = targetCoinResult || getCandidateResult(true);
-                    displayFinalResult(finalResult);
+                    const finalResult = targetCoinResult || getCandidateResult(rollTab, true);
+                    displayFinalResult(finalResult, rollTab);
                 } catch (err) {
                     console.error("Roll execution error:", err);
                 } finally {
                     isRolling = false;
+                    rollTimer = null;
                     btnRoll.classList.remove('rolling');
                 }
             }
@@ -942,26 +968,29 @@ document.addEventListener('DOMContentLoaded', () => {
         runNextTick();
     }
 
-    function displayFinalResult(result) {
+    function displayFinalResult(result, targetTab = activeTab) {
         if (!result) return;
 
-        tabResults[activeTab] = result;
+        tabResults[targetTab] = result;
         saveTabResultsToStorage();
 
-        latestResultRaw = result.raw || result.primary;
+        // Only update current DOM result stage if the user is still on targetTab
+        if (activeTab === targetTab) {
+            latestResultRaw = result.raw || result.primary;
 
-        primaryResultText.classList.remove('animating');
-        primaryResultText.classList.remove('result-pop');
-        adjustPrimaryFontSize(result.primary);
-        void primaryResultText.offsetWidth; // Trigger reflow for CSS keyframe
-        primaryResultText.classList.add('result-pop');
-        primaryResultText.textContent = result.primary;
+            primaryResultText.classList.remove('animating');
+            primaryResultText.classList.remove('result-pop');
+            adjustPrimaryFontSize(result.primary);
+            void primaryResultText.offsetWidth; // Trigger reflow for CSS keyframe
+            primaryResultText.classList.add('result-pop');
+            primaryResultText.textContent = result.primary;
 
-        if (result.breakdown) {
-            resultBreakdown.innerHTML = `<span>${escapeHtml(result.breakdown)}</span>`;
-            resultBreakdown.classList.remove('hidden');
-        } else {
-            resultBreakdown.classList.add('hidden');
+            if (result.breakdown) {
+                resultBreakdown.innerHTML = `<span>${escapeHtml(result.breakdown)}</span>`;
+                resultBreakdown.classList.remove('hidden');
+            } else {
+                resultBreakdown.classList.add('hidden');
+            }
         }
 
         // Play resolution chime
