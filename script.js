@@ -1389,9 +1389,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadSettingsFromStorage() {
         try {
             const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
-            if (!raw) return;
+            if (!raw) return false;
             const s = JSON.parse(raw);
-            if (!s || typeof s !== 'object') return;
+            if (!s || typeof s !== 'object') return false;
 
             // Numbers
             if (s.numbers) {
@@ -1408,8 +1408,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // List
+            let listLoaded = false;
             if (s.list) {
-                if (s.list.items !== undefined) listInput.value = s.list.items;
+                if (s.list.items !== undefined) {
+                    listInput.value = s.list.items;
+                    listLoaded = true;
+                }
                 if (s.list.pickCount !== undefined) listPickCount.value = s.list.pickCount;
                 if (s.list.removeChosen !== undefined) checkListRemove.checked = !!s.list.removeChosen;
                 updateListCounter();
@@ -1439,7 +1443,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (s.activeTab && tabButtons[s.activeTab]) {
                 activeTab = s.activeTab;
             }
-        } catch (e) {}
+
+            return listLoaded;
+        } catch (e) {
+            return false;
+        }
     }
 
     // =========================================================================
@@ -1484,13 +1492,13 @@ document.addEventListener('DOMContentLoaded', () => {
         renderHistoryList();
 
         // Restore Settings
-        loadSettingsFromStorage();
+        const listLoaded = loadSettingsFromStorage();
 
         // Restore Per-tab Results
         loadTabResultsFromStorage();
 
-        // Initialize default list if empty
-        if (!listInput.value.trim()) {
+        // Initialize default list only on initial launch when no saved list exists
+        if (!listLoaded && !listInput.value.trim()) {
             listInput.value = 'Option 1\nOption 2\nOption 3';
         }
         updateListCounter();
