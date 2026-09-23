@@ -534,8 +534,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // If remove chosen is enabled and this is the final resolution, remove picked items from listInput
         if (isFinal && checkListRemove.checked) {
-            const remaining = items.filter(item => !picked.includes(item));
-            listInput.value = remaining.join('\n');
+            const remaining = [...items];
+            for (const item of picked) {
+                const idx = remaining.indexOf(item);
+                if (idx !== -1) {
+                    remaining.splice(idx, 1);
+                }
+            }
+            const separator = (!listInput.value.includes('\n') && listInput.value.includes(',')) ? ', ' : '\n';
+            listInput.value = remaining.join(separator);
             updateListCounter();
             saveSettingsToStorage();
         }
