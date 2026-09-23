@@ -309,6 +309,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (result.mode === 'color' && result.colorData) {
             currentColorData = result.colorData;
+            const isPalette = Array.isArray(result.colorData);
+            setColorSubmode(isPalette ? 'palette' : 'single');
             renderColorPreview();
         } else if (result.mode === 'coin' && result.isHeads !== undefined) {
             flipCoinVisual(result.isHeads, false);
@@ -688,13 +690,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     btnColorSingle.addEventListener('click', () => {
+        if (activeColorMode === 'single') return;
         setColorSubmode('single');
         saveSettingsToStorage();
+        if (activeTab === 'colors') {
+            executeRoll();
+        }
     });
 
     btnColorPalette.addEventListener('click', () => {
+        if (activeColorMode === 'palette') return;
         setColorSubmode('palette');
         saveSettingsToStorage();
+        if (activeTab === 'colors') {
+            executeRoll();
+        }
     });
 
     selectPaletteType.addEventListener('change', () => {
@@ -1171,21 +1181,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================================
     // Copy To Clipboard & Toast Helper
     // =========================================================================
-    function copyTextToClipboard(text, successMsg) {
+    function copyTextToClipboard(text, successMsg, onCopied) {
         if (!text) return;
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text)
                 .then(() => {
                     if (successMsg) showToast(successMsg);
-                    triggerCopiedBadge();
+                    if (typeof onCopied === 'function') onCopied();
                 })
-                .catch(() => fallbackCopy(text, successMsg));
+                .catch(() => fallbackCopy(text, successMsg, onCopied));
         } else {
-            fallbackCopy(text, successMsg);
+            fallbackCopy(text, successMsg, onCopied);
         }
     }
 
-    function fallbackCopy(text, successMsg) {
+    function fallbackCopy(text, successMsg, onCopied) {
         const ta = document.createElement('textarea');
         ta.value = text;
         ta.style.position = 'fixed';
@@ -1195,7 +1205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             document.execCommand('copy');
             if (successMsg) showToast(successMsg);
-            triggerCopiedBadge();
+            if (typeof onCopied === 'function') onCopied();
         } catch (e) {
             showToast('Unable to copy');
         }
@@ -1234,7 +1244,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('No result to copy yet');
             return;
         }
-        copyTextToClipboard(latestResultRaw, 'Result copied to clipboard');
+        copyTextToClipboard(latestResultRaw, 'Result copied to clipboard', triggerCopiedBadge);
     });
 
     // =========================================================================
